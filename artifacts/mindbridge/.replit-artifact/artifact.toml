@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "MindBridge AI"
+version = "1.0.0"
+id = "artifacts/mindbridge"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18425
+
+[services.development]
+run = "pnpm --filter @workspace/mindbridge run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/mindbridge", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/mindbridge/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18425"
+BASE_PATH = "/"

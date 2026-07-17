@@ -1,0 +1,80 @@
+I'm building MindBridge AI for a hackathon (Next.js, deployed on Vercel). It's an AI tutor for intro data structures & algorithms that diagnoses why a student is stuck instead of just answering their question.
+
+Core idea: A student asks about a topic (e.g. "I don't understand Binary Search"). Instead of explaining that topic, the system:
+
+
+Hypothesizes which underlying prerequisite concept is actually missing (via one LLM call)
+Asks a short multiple-choice question to validate that hypothesis (not another guess — evidence)
+Teaches only the confirmed gap, with a plain-language explanation and analogy
+Quizzes the student on just that gap
+Updates a per-student mastery map
+Shows a dashboard with mastery bars per topic and suggests what to learn next
+
+
+Critical design constraint: Only step 1 (the hypothesis) should call a live LLM. Steps 2-4 (validation question, teaching content, quiz) must be static lookups from a pre-authored data file — not generated live. This keeps the demo reliable. Step 6 is pure logic, no LLM.
+
+Please scaffold:
+
+1. data/graph.json
+A knowledge graph of exactly 15 nodes for intro DSA: variables & data types, arrays, loops, linear search, sorted arrays, binary search, divide & conquer, basic sorting (bubble/selection), merge sort, recursion, base case & recursive case, stacks, trees (intro), tree traversal, Big-O/time complexity.
+
+Each node needs this shape:
+
+json{
+  "id": "sorted_arrays",
+  "label": "Sorted arrays",
+  "prerequisites": ["arrays", "loops"],
+  "teaching": {
+    "explanation": "...",
+    "analogy": "..."
+  },
+  "validation_question": {
+    "prompt": "...",
+    "options": ["...", "..."],
+    "correct": "..."
+  },
+  "quiz": [
+    { "q": "...", "options": ["...", "...", "..."], "correct": 0 }
+  ]
+}
+
+Draft real, correct pedagogical content for all 15 nodes — don't leave placeholders.
+
+2. API routes (Next.js pages/api/ or App Router equivalent):
+
+
+POST /api/diagnose — takes the student's free-text question, calls the LLM with a prompt that returns { asked_topic, hypothesis_node, confidence } as JSON, using the 15 node ids as the allowed set
+POST /api/validate — takes a node id, returns that node's validation_question from graph.json (no LLM call)
+POST /api/teach — takes a confirmed node id, returns teaching.explanation and teaching.analogy from graph.json (no LLM call)
+POST /api/quiz — takes a node id, returns that node's quiz array (no LLM call)
+GET /api/progress — takes current mastery state, returns the next recommended node using: find the first node where mastery < 0.7 AND all its prerequisites have mastery >= 0.7
+
+
+3. lib/llm.js
+A single wrapper function around the Anthropic API call, used only by /api/diagnose. Include a timeout and a fallback path (return a default hypothesis node) if the call fails, so the demo never shows a raw error.
+
+4. Frontend flow (pages/index.js + components):
+
+
+QuestionInput — text input constrained by a few example question chips for reliability, submits to /api/diagnose
+ValidationCheck — renders the multiple-choice validation question, submits the answer, confirms or revises the gap
+Explanation — shows the teaching content for the confirmed gap
+QuizPanel — renders the quiz, scores it client-side, updates mastery state
+MasteryBar — Duolingo-style progress bar per topic (percentage fill, not just a status color)
+LearningPath — shows mastered topics with checkmarks and today's suggested next topic, using /api/progress
+
+
+5. State management
+Keep student mastery state in React state (or a simple in-memory store) for the hackathon demo — no database needed. Structure: { mastery: { node_id: 0.0-1.0 }, history: [...] }.
+
+Style notes
+
+
+Clean, minimal UI — this is a hackathon demo, prioritize clarity over decoration
+Every screen should make it obvious what's happening: "diagnosing," "checking your understanding," "here's the gap," "mastery updated"
+Handle the empty/first-load state and the LLM-failure fallback state explicitly — don't let either look broken
+
+
+Build order
+
+Please build in this order and pause for me to test after each: (1) graph.json with all 15 nodes fully authored, (2) the four static-lookup API routes, (3) /api/diagnose with the LLM wrapper and fallback, (4) the frontend flow wired end-to-end for 2-3 nodes only, (5) expand to all 15 nodes, (6) mastery dashboard + learning path.
