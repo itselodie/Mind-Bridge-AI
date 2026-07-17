@@ -20,13 +20,8 @@ const VALID_NODE_IDS = [
 ];
 
 const FALLBACK_NODE = "variables_and_data_types";
-
-// Models tried in order — if the first is overloaded/erroring, try the next
-const MODEL_PRIORITY = [
-  "gemini-2.0-flash",
-  "gemini-1.5-flash",
-  "gemini-2.5-flash",
-];
+const TIMEOUT_MS = 10_000;
+const MAX_JSON_RETRIES = 2; // only retry for truncated/malformed JSON
 
 export interface DiagnosisResult {
   asked_topic: string;
@@ -50,106 +45,116 @@ function buildPrompt(question: string): string {
 
 A student wrote: "${question}"
 
-Your job: identify which foundational DSA concept they are actually struggling with — not just what they asked about, but the underlying prerequisite that's likely missing.
+Identify which foundational DSA concept they are actually struggling with — the underlying prerequisite that is likely missing, not just what they asked about.
 
-Respond with ONLY a JSON object (no markdown, no explanation) matching exactly:
-{"asked_topic": "<topic the student mentioned>", "hypothesis_node": "<node_id>", "confusion_type": "<brief type of confusion e.g. conceptual misunderstanding>", "confidence": <0.0-1.0>}
+Respond with ONLY valid JSON (no markdown, no explanation):
+{"asked_topic": "<topic the student mentioned>", "hypothesis_node": "<node_id>", "confusion_type": "<brief type of confusion>", "confidence": <0.0-1.0>}
 
 The hypothesis_node MUST be one of these exact ids:
 ${VALID_NODE_IDS.join(", ")}
 
-Pick the most likely prerequisite gap. Example: for binary search, the gap might be "sorted_arrays" or "divide_and_conquer" rather than "binary_search" itself.`;
+Example: for "I don't understand binary search" → hypothesis_node might be "sorted_arrays" or "divide_and_conquer".`;
 }
 
-async function callGemini(
+/**
+ * Call Gemini once with a hard 10-second timeout.
+ * Returns the raw response text or throws.
+ */
+async function callGeminiOnce(
   ai: GoogleGenAI,
-  model: string,
   prompt: string,
 ): Promise<string> {
-  const response = await ai.models.generateContent({
-    model,
-    contents: [{ role: "user", parts: [{ text: prompt }] }],
-    config: {
-      responseMimeType: "application/json",
-      maxOutputTokens: 1024,
-    },
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    console.error("[MindBridge] Gemini request timed out after 10s — aborting");
+    controller.abort();
+  }, TIMEOUT_MS);
 
-  const rawText = (response.text ?? "").trim();
-  if (!rawText) {
-    throw new Error(`Empty response from model ${model}`);
+  try {
+    console.log("[MindBridge] Gemini request started");
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: {
+        responseMimeType: "application/json",
+        maxOutputTokens: 1024,
+      },
+    });
+
+    console.log("[MindBridge] Gemini response received");
+
+    const rawText = (response.text ?? "").trim();
+    if (!rawText) {
+      throw new Error("Gemini returned an empty response");
+    }
+
+    return rawText;
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  // Log the raw response so we can see exactly what the model returned
-  logger.debug({ model, rawText }, "[MindBridge] Raw Gemini response");
-  if (process.env["NODE_ENV"] === "development") {
-    console.log(`[MindBridge] Raw response from ${model}:`, rawText);
-  }
-
-  return rawText;
 }
 
+/**
+ * Attempt up to MAX_JSON_RETRIES times if the response is truncated/malformed JSON.
+ * Any non-JSON error (rate limit, auth, timeout) throws immediately — no retry.
+ */
 async function callWithRetry(
   ai: GoogleGenAI,
   prompt: string,
 ): Promise<string> {
-  const maxAttemptsPerModel = 2;
-  const errors: string[] = [];
+  for (let attempt = 1; attempt <= MAX_JSON_RETRIES; attempt++) {
+    let rawText: string;
 
-  for (const model of MODEL_PRIORITY) {
-    for (let attempt = 1; attempt <= maxAttemptsPerModel; attempt++) {
-      try {
-        const raw = await callGemini(ai, model, prompt);
+    try {
+      rawText = await callGeminiOnce(ai, prompt);
+    } catch (err) {
+      // Network/API/timeout error — don't retry, fail fast
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`[MindBridge] Gemini API error on attempt ${attempt}: ${msg}`);
+      throw err;
+    }
 
-        // Validate it's parseable before returning
-        const cleaned = raw
-          .replace(/^```(?:json)?\s*/i, "")
-          .replace(/\s*```$/, "");
-        JSON.parse(cleaned); // throws if truncated/malformed
-        return cleaned;
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        const isOverloaded =
-          msg.includes("503") ||
-          msg.includes("UNAVAILABLE") ||
-          msg.includes("high demand");
-        const isMalformedJson =
-          err instanceof SyntaxError || msg.includes("JSON");
+    // Strip accidental markdown fences
+    const cleaned = rawText
+      .replace(/^```(?:json)?\s*/i, "")
+      .replace(/\s*```$/i, "")
+      .trim();
 
-        logger.warn(
-          { model, attempt, err },
-          `[MindBridge] Attempt ${attempt} with ${model} failed: ${msg}`,
+    console.log(`[MindBridge] Raw response (attempt ${attempt}): ${cleaned}`);
+
+    try {
+      JSON.parse(cleaned); // validate before returning
+      console.log("[MindBridge] JSON parsed successfully");
+      return cleaned;
+    } catch (parseErr) {
+      const msg = parseErr instanceof Error ? parseErr.message : String(parseErr);
+      console.error(
+        `[MindBridge] JSON parse failed on attempt ${attempt}: ${msg} | raw: ${cleaned}`,
+      );
+      logger.warn(
+        { attempt, rawText: cleaned, parseErr },
+        "[MindBridge] Truncated/malformed JSON from Gemini — retrying",
+      );
+
+      if (attempt === MAX_JSON_RETRIES) {
+        throw new Error(
+          `Gemini returned malformed JSON after ${MAX_JSON_RETRIES} attempts: ${msg}`,
         );
-        if (process.env["NODE_ENV"] === "development") {
-          console.error(
-            `[MindBridge] ${model} attempt ${attempt} error:`,
-            msg,
-          );
-        }
-
-        errors.push(`${model}[${attempt}]: ${msg}`);
-
-        // Don't retry this model if it's a permanent error (auth, quota, etc.)
-        // Only retry/fallback for overload or malformed JSON
-        if (!isOverloaded && !isMalformedJson) {
-          break; // skip remaining attempts on this model, try next
-        }
-
-        // Short backoff before retry (same model, attempt 2) or next model
-        if (attempt < maxAttemptsPerModel) {
-          await new Promise((r) => setTimeout(r, 500 * attempt));
-        }
       }
+
+      // Short pause before retry (JSON truncation is usually transient)
+      await new Promise((r) => setTimeout(r, 300));
     }
   }
 
-  throw new Error(
-    `All Gemini models failed. Errors:\n${errors.join("\n")}`,
-  );
+  throw new Error("Unreachable");
 }
 
 export async function diagnoseGap(question: string): Promise<DiagnosisResult> {
   const isDev = process.env["NODE_ENV"] === "development";
+
+  console.log(`[MindBridge] Request received — question: "${question}"`);
 
   try {
     const ai = createClient();
@@ -182,12 +187,7 @@ export async function diagnoseGap(question: string): Promise<DiagnosisResult> {
         ? parsed.confusion_type
         : "conceptual misunderstanding";
 
-    logger.info(
-      { hypothesisNode, confidence, model: "gemini" },
-      "[MindBridge] Diagnosis complete",
-    );
-
-    return {
+    const result: DiagnosisResult = {
       asked_topic:
         typeof parsed.asked_topic === "string" ? parsed.asked_topic : question,
       hypothesis_node: hypothesisNode,
@@ -195,6 +195,16 @@ export async function diagnoseGap(question: string): Promise<DiagnosisResult> {
       confidence,
       fallback: false,
     };
+
+    logger.info(
+      { hypothesisNode, confidence },
+      "[MindBridge] Diagnosis complete",
+    );
+    console.log(
+      `[MindBridge] Response sent to frontend — node: ${hypothesisNode}, confidence: ${confidence}`,
+    );
+
+    return result;
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : String(err);
 
@@ -202,7 +212,7 @@ export async function diagnoseGap(question: string): Promise<DiagnosisResult> {
     logger.error({ err, question }, `[MindBridge] Gemini diagnosis failed: ${errorMessage}`);
     console.error("[MindBridge] Full error:", err);
 
-    return {
+    const fallback: DiagnosisResult = {
       asked_topic: question,
       hypothesis_node: FALLBACK_NODE,
       confusion_type: "unknown",
@@ -210,5 +220,11 @@ export async function diagnoseGap(question: string): Promise<DiagnosisResult> {
       fallback: true,
       error: isDev ? errorMessage : "AI temporarily unavailable",
     };
+
+    console.log(
+      `[MindBridge] Response sent to frontend — FALLBACK (${errorMessage})`,
+    );
+
+    return fallback;
   }
 }
