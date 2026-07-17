@@ -21,6 +21,13 @@ const VALID_NODE_IDS = [
 
 const FALLBACK_NODE = "variables_and_data_types";
 
+// Models tried in order — if the first is overloaded/erroring, try the next
+const MODEL_PRIORITY = [
+  "gemini-2.0-flash",
+  "gemini-1.5-flash",
+  "gemini-2.5-flash",
+];
+
 export interface DiagnosisResult {
   asked_topic: string;
   hypothesis_node: string;
@@ -38,54 +45,118 @@ function createClient(): GoogleGenAI {
   return new GoogleGenAI({ apiKey });
 }
 
-export async function diagnoseGap(question: string): Promise<DiagnosisResult> {
-  const timeoutMs = 10000;
-
-  const prompt = `You are MindBridge AI, a diagnostic tutor for intro data structures & algorithms.
+function buildPrompt(question: string): string {
+  return `You are MindBridge AI, a diagnostic tutor for intro data structures & algorithms.
 
 A student wrote: "${question}"
 
 Your job: identify which foundational DSA concept they are actually struggling with — not just what they asked about, but the underlying prerequisite that's likely missing.
 
-You MUST respond with ONLY a JSON object (no markdown, no explanation) matching exactly:
-{"asked_topic": "<topic the student mentioned>", "hypothesis_node": "<node_id>", "confusion_type": "<brief description of the type of confusion, e.g. 'conceptual misunderstanding' or 'implementation confusion'>", "confidence": <0.0-1.0>}
+Respond with ONLY a JSON object (no markdown, no explanation) matching exactly:
+{"asked_topic": "<topic the student mentioned>", "hypothesis_node": "<node_id>", "confusion_type": "<brief type of confusion e.g. conceptual misunderstanding>", "confidence": <0.0-1.0>}
 
 The hypothesis_node MUST be one of these exact ids:
 ${VALID_NODE_IDS.join(", ")}
 
-Pick the most likely prerequisite gap. For example, if they ask about binary search, the gap might be "sorted_arrays" or "divide_and_conquer" rather than "binary_search" itself.`;
+Pick the most likely prerequisite gap. Example: for binary search, the gap might be "sorted_arrays" or "divide_and_conquer" rather than "binary_search" itself.`;
+}
+
+async function callGemini(
+  ai: GoogleGenAI,
+  model: string,
+  prompt: string,
+): Promise<string> {
+  const response = await ai.models.generateContent({
+    model,
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    config: {
+      responseMimeType: "application/json",
+      maxOutputTokens: 1024,
+    },
+  });
+
+  const rawText = (response.text ?? "").trim();
+  if (!rawText) {
+    throw new Error(`Empty response from model ${model}`);
+  }
+
+  // Log the raw response so we can see exactly what the model returned
+  logger.debug({ model, rawText }, "[MindBridge] Raw Gemini response");
+  if (process.env["NODE_ENV"] === "development") {
+    console.log(`[MindBridge] Raw response from ${model}:`, rawText);
+  }
+
+  return rawText;
+}
+
+async function callWithRetry(
+  ai: GoogleGenAI,
+  prompt: string,
+): Promise<string> {
+  const maxAttemptsPerModel = 2;
+  const errors: string[] = [];
+
+  for (const model of MODEL_PRIORITY) {
+    for (let attempt = 1; attempt <= maxAttemptsPerModel; attempt++) {
+      try {
+        const raw = await callGemini(ai, model, prompt);
+
+        // Validate it's parseable before returning
+        const cleaned = raw
+          .replace(/^```(?:json)?\s*/i, "")
+          .replace(/\s*```$/, "");
+        JSON.parse(cleaned); // throws if truncated/malformed
+        return cleaned;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        const isOverloaded =
+          msg.includes("503") ||
+          msg.includes("UNAVAILABLE") ||
+          msg.includes("high demand");
+        const isMalformedJson =
+          err instanceof SyntaxError || msg.includes("JSON");
+
+        logger.warn(
+          { model, attempt, err },
+          `[MindBridge] Attempt ${attempt} with ${model} failed: ${msg}`,
+        );
+        if (process.env["NODE_ENV"] === "development") {
+          console.error(
+            `[MindBridge] ${model} attempt ${attempt} error:`,
+            msg,
+          );
+        }
+
+        errors.push(`${model}[${attempt}]: ${msg}`);
+
+        // Don't retry this model if it's a permanent error (auth, quota, etc.)
+        // Only retry/fallback for overload or malformed JSON
+        if (!isOverloaded && !isMalformedJson) {
+          break; // skip remaining attempts on this model, try next
+        }
+
+        // Short backoff before retry (same model, attempt 2) or next model
+        if (attempt < maxAttemptsPerModel) {
+          await new Promise((r) => setTimeout(r, 500 * attempt));
+        }
+      }
+    }
+  }
+
+  throw new Error(
+    `All Gemini models failed. Errors:\n${errors.join("\n")}`,
+  );
+}
+
+export async function diagnoseGap(question: string): Promise<DiagnosisResult> {
+  const isDev = process.env["NODE_ENV"] === "development";
 
   try {
     const ai = createClient();
+    const prompt = buildPrompt(question);
+    const cleanedJson = await callWithRetry(ai, prompt);
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-    let rawJson: string;
-    try {
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        config: {
-          responseMimeType: "application/json",
-          maxOutputTokens: 512,
-        },
-      });
-      clearTimeout(timeoutId);
-
-      rawJson = (response.text ?? "").trim();
-      if (!rawJson) {
-        throw new Error("Empty response from Gemini");
-      }
-    } catch (err) {
-      clearTimeout(timeoutId);
-      throw err;
-    }
-
-    // Strip any markdown fences if the model included them despite the mime type
-    rawJson = rawJson.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
-
-    const parsed = JSON.parse(rawJson) as {
+    const parsed = JSON.parse(cleanedJson) as {
       asked_topic?: unknown;
       hypothesis_node?: unknown;
       confusion_type?: unknown;
@@ -106,9 +177,15 @@ Pick the most likely prerequisite gap. For example, if they ask about binary sea
         : 0.7;
 
     const confusionType =
-      typeof parsed.confusion_type === "string" && parsed.confusion_type.length > 0
+      typeof parsed.confusion_type === "string" &&
+      parsed.confusion_type.length > 0
         ? parsed.confusion_type
         : "conceptual misunderstanding";
+
+    logger.info(
+      { hypothesisNode, confidence, model: "gemini" },
+      "[MindBridge] Diagnosis complete",
+    );
 
     return {
       asked_topic:
@@ -119,18 +196,11 @@ Pick the most likely prerequisite gap. For example, if they ask about binary sea
       fallback: false,
     };
   } catch (err) {
-    // Log the full error so it's visible in server console — never swallow silently
-    const isDev = process.env["NODE_ENV"] === "development";
     const errorMessage = err instanceof Error ? err.message : String(err);
 
-    logger.error(
-      { err, question },
-      `[MindBridge] Gemini API call failed: ${errorMessage}`,
-    );
-
-    if (isDev) {
-      console.error("[MindBridge] Gemini API error (full):", err);
-    }
+    // Always log the full error — never swallow silently
+    logger.error({ err, question }, `[MindBridge] Gemini diagnosis failed: ${errorMessage}`);
+    console.error("[MindBridge] Full error:", err);
 
     return {
       asked_topic: question,
@@ -138,7 +208,7 @@ Pick the most likely prerequisite gap. For example, if they ask about binary sea
       confusion_type: "unknown",
       confidence: 0.5,
       fallback: true,
-      error: isDev ? errorMessage : undefined,
+      error: isDev ? errorMessage : "AI temporarily unavailable",
     };
   }
 }
