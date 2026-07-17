@@ -6,6 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface HealthStatus {
-  status: string;
+export interface TopicProgress {
+  id: string;
+  label: string;
+  mastery: number;
+  prerequisites_met: boolean;
+  is_unlocked: boolean;
 }

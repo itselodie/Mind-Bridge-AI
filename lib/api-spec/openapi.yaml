@@ -3,13 +3,15 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: MindBridge AI — DSA gap diagnosis tutor
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: mindbridge
+    description: MindBridge AI tutoring operations
 paths:
   /healthz:
     get:
@@ -24,6 +26,130 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /diagnose:
+    post:
+      operationId: diagnose
+      tags: [mindbridge]
+      summary: Diagnose knowledge gap
+      description: >
+        Takes the student's free-text question, calls the LLM to hypothesize
+        which prerequisite concept is missing, returns structured diagnosis.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiagnoseInput"
+      responses:
+        "200":
+          description: Diagnosis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiagnoseResult"
+
+  /validate:
+    post:
+      operationId: validate
+      tags: [mindbridge]
+      summary: Get validation question for a node
+      description: Returns the static validation question for the given node id (no LLM call).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NodeInput"
+      responses:
+        "200":
+          description: Validation question
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationQuestion"
+        "404":
+          description: Node not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /teach:
+    post:
+      operationId: teach
+      tags: [mindbridge]
+      summary: Get teaching content for a confirmed node
+      description: Returns explanation and analogy for the confirmed gap node (no LLM call).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NodeInput"
+      responses:
+        "200":
+          description: Teaching content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeachingContent"
+        "404":
+          description: Node not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /quiz:
+    post:
+      operationId: quiz
+      tags: [mindbridge]
+      summary: Get quiz for a node
+      description: Returns the quiz questions for the given node (no LLM call).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NodeInput"
+      responses:
+        "200":
+          description: Quiz questions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizResult"
+        "404":
+          description: Node not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /progress:
+    post:
+      operationId: getProgress
+      tags: [mindbridge]
+      summary: Get next recommended node
+      description: >
+        Given the current mastery map, returns the next node to study — the
+        first node where mastery < 0.7 and all prerequisites have mastery >= 0.7.
+        Also returns the full topic list with mastery levels.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MasteryInput"
+      responses:
+        "200":
+          description: Progress and recommendation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgressResult"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +160,138 @@ components:
       required:
         - status
 
+    DiagnoseInput:
+      type: object
+      required: [question]
+      properties:
+        question:
+          type: string
+          description: The student's free-text question or confusion statement
+          minLength: 1
+
+    DiagnoseResult:
+      type: object
+      required: [asked_topic, hypothesis_node, confidence, fallback]
+      properties:
+        asked_topic:
+          type: string
+          description: The topic the student appears to be asking about
+        hypothesis_node:
+          type: string
+          description: The node id of the hypothesized missing prerequisite
+        confidence:
+          type: number
+          description: LLM confidence score 0.0–1.0
+        fallback:
+          type: boolean
+          description: True if the LLM call failed and a fallback node was used
+
+    NodeInput:
+      type: object
+      required: [node_id]
+      properties:
+        node_id:
+          type: string
+          description: The graph node id
+
+    ValidationQuestion:
+      type: object
+      required: [node_id, label, prompt, options, correct]
+      properties:
+        node_id:
+          type: string
+        label:
+          type: string
+        prompt:
+          type: string
+        options:
+          type: array
+          items:
+            type: string
+        correct:
+          type: string
+
+    TeachingContent:
+      type: object
+      required: [node_id, label, explanation, analogy]
+      properties:
+        node_id:
+          type: string
+        label:
+          type: string
+        explanation:
+          type: string
+        analogy:
+          type: string
+
+    QuizQuestion:
+      type: object
+      required: [q, options, correct]
+      properties:
+        q:
+          type: string
+        options:
+          type: array
+          items:
+            type: string
+        correct:
+          type: integer
+
+    QuizResult:
+      type: object
+      required: [node_id, label, quiz]
+      properties:
+        node_id:
+          type: string
+        label:
+          type: string
+        quiz:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuizQuestion"
+
+    MasteryInput:
+      type: object
+      required: [mastery]
+      properties:
+        mastery:
+          type: object
+          description: Map of node_id to mastery score (0.0–1.0)
+          additionalProperties:
+            type: number
+
+    TopicProgress:
+      type: object
+      required: [id, label, mastery, prerequisites_met, is_unlocked]
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        mastery:
+          type: number
+        prerequisites_met:
+          type: boolean
+        is_unlocked:
+          type: boolean
+
+    ProgressResult:
+      type: object
+      required: [next_node, topics]
+      properties:
+        next_node:
+          type: ["string", "null"]
+          description: The node id of the recommended next topic, or null if all mastered
+        next_label:
+          type: ["string", "null"]
+        topics:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopicProgress"
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface HealthStatus {
-  status: string;
-}
+/**
+ * Map of node_id to mastery score (0.0–1.0)
+ */
+export type MasteryInputMastery = {[key: string]: number};

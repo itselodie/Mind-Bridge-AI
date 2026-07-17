@@ -6,6 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface HealthStatus {
-  status: string;
+export interface ValidationQuestion {
+  node_id: string;
+  label: string;
+  prompt: string;
+  options: string[];
+  correct: string;
 }

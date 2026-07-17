@@ -6,6 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface HealthStatus {
-  status: string;
+export interface DiagnoseInput {
+  /**
+     * The student's free-text question or confusion statement
+     * @minLength 1
+     */
+  question: string;
 }
