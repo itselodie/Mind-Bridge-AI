@@ -1,5 +1,28 @@
 /** Shared node metadata used across the frontend */
 
+/**
+ * First-level prerequisites for each node, mirroring graph.json.
+ * Used by the direct-learn flow to surface optional prereq hints
+ * without calling the API.
+ */
+export const NODE_PREREQUISITES: Record<string, string[]> = {
+  variables_and_data_types:    [],
+  arrays:                      ["variables_and_data_types"],
+  loops:                       ["variables_and_data_types"],
+  linear_search:               ["arrays", "loops"],
+  sorted_arrays:               ["arrays", "loops"],
+  binary_search:               ["sorted_arrays", "divide_and_conquer"],
+  divide_and_conquer:          ["recursion"],
+  basic_sorting:               ["arrays", "loops"],
+  recursion:                   ["loops"],
+  base_case_and_recursive_case: ["recursion"],
+  merge_sort:                  ["recursion", "basic_sorting", "divide_and_conquer"],
+  stacks:                      ["arrays"],
+  big_o_time_complexity:       ["loops"],
+  trees_intro:                 ["recursion", "stacks"],
+  tree_traversal:              ["trees_intro", "recursion"],
+};
+
 export const NODE_LABELS: Record<string, string> = {
   variables_and_data_types: "Variables & Data Types",
   arrays: "Arrays",

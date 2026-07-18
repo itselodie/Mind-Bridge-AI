@@ -14,32 +14,161 @@ const EXAMPLES = [
   "I'm confused about trees",
 ];
 
+// ─── Intent detection ─────────────────────────────────────────────────────────
+
 export type QuestionIntent = "LEARN" | "CONFUSED";
 
-/**
- * Classify the student's question as a learning request ("What is X?",
- * "Explain X") or a confusion/debugging request ("I don't understand X").
- * Defaults to CONFUSED so the existing diagnostic flow is unchanged when
- * the intent is ambiguous.
- */
+const LEARN_PATTERNS = [
+  /^what (?:is|are|was|were|'s|does)\b/,
+  /^explain\b/,
+  /^tell me (?:about|what|how)\b/,
+  /^define\b/,
+  /^describe\b/,
+  /^teach me\b/,
+  /^how does\b/,
+  /^how do\b/,
+  /^show me\b/,
+  /^can you explain\b/,
+  /^can you teach\b/,
+  /^i (?:want|need|would like) to (?:learn|know|understand) (?:about |what |how )?\w/,
+];
+
 function detectIntent(question: string): QuestionIntent {
   const q = question.toLowerCase().trim();
-  const learnPatterns = [
-    /^what (is|are|was|were|'s|does)\b/,
-    /^explain\b/,
-    /^tell me (about|what|how)\b/,
-    /^define\b/,
-    /^describe\b/,
-    /^teach me\b/,
-    /^how does\b/,
-    /^how do\b/,
-    /^show me\b/,
-    /^can you explain\b/,
-    /^can you teach\b/,
-    /^i (want|need|would like) to (learn|know|understand) (about |what |how )?\w/,
-  ];
-  return learnPatterns.some((p) => p.test(q)) ? "LEARN" : "CONFUSED";
+  return LEARN_PATTERNS.some((p) => p.test(q)) ? "LEARN" : "CONFUSED";
 }
+
+// ─── Topic extraction ─────────────────────────────────────────────────────────
+
+/**
+ * Strip the question verb/prefix and return the bare topic noun.
+ * e.g. "What is an array?" → "array"
+ *      "Teach me stacks"   → "stacks"
+ */
+function extractTopic(question: string): string {
+  const q = question.trim().replace(/[?!.]+$/, "");
+  const patterns: RegExp[] = [
+    /^what (?:is|are|was|were|'s|does) (?:a |an |the )?(.+)$/i,
+    /^explain (?:a |an |the )?(.+)$/i,
+    /^tell me about (?:a |an |the )?(.+)$/i,
+    /^define (?:a |an |the )?(.+)$/i,
+    /^describe (?:a |an |the )?(.+)$/i,
+    /^teach me (?:about )?(?:a |an |the )?(.+)$/i,
+    /^how does (?:a |an |the )?(.+?)(?: work)?$/i,
+    /^how do (?:a |an |the )?(.+?)(?: work)?$/i,
+    /^show me (?:a |an |the )?(.+)$/i,
+    /^can you explain (?:a |an |the )?(.+)$/i,
+    /^can you teach me (?:about )?(?:a |an |the )?(.+)$/i,
+    /^i (?:want|need|would like) to (?:learn|know|understand) (?:about |what |how )?(?:a |an |the )?(.+)$/i,
+  ];
+  for (const p of patterns) {
+    const m = q.match(p);
+    if (m) return m[1].trim();
+  }
+  return q;
+}
+
+// ─── Node resolution ──────────────────────────────────────────────────────────
+
+/**
+ * Map a free-text topic string to a graph node ID without hitting the API.
+ * Returns null when the topic is not in the local graph (caller falls back to /diagnose).
+ */
+const TOPIC_ALIASES: Record<string, string> = {
+  // variables
+  "variable": "variables_and_data_types",
+  "variables": "variables_and_data_types",
+  "data type": "variables_and_data_types",
+  "data types": "variables_and_data_types",
+  "variables and data types": "variables_and_data_types",
+  "variable and data type": "variables_and_data_types",
+  // arrays
+  "array": "arrays",
+  "arrays": "arrays",
+  // loops
+  "loop": "loops",
+  "loops": "loops",
+  "for loop": "loops",
+  "while loop": "loops",
+  "iteration": "loops",
+  // linear search
+  "linear search": "linear_search",
+  "sequential search": "linear_search",
+  // sorted arrays
+  "sorted array": "sorted_arrays",
+  "sorted arrays": "sorted_arrays",
+  "sorting an array": "sorted_arrays",
+  // binary search
+  "binary search": "binary_search",
+  // big-o
+  "big o": "big_o_time_complexity",
+  "big-o": "big_o_time_complexity",
+  "big o notation": "big_o_time_complexity",
+  "time complexity": "big_o_time_complexity",
+  "space complexity": "big_o_time_complexity",
+  "complexity": "big_o_time_complexity",
+  "algorithmic complexity": "big_o_time_complexity",
+  "asymptotic notation": "big_o_time_complexity",
+  // divide and conquer
+  "divide and conquer": "divide_and_conquer",
+  "divide & conquer": "divide_and_conquer",
+  // basic sorting
+  "sorting": "basic_sorting",
+  "basic sorting": "basic_sorting",
+  "bubble sort": "basic_sorting",
+  "insertion sort": "basic_sorting",
+  "selection sort": "basic_sorting",
+  // merge sort
+  "merge sort": "merge_sort",
+  "mergesort": "merge_sort",
+  // recursion
+  "recursion": "recursion",
+  "recursive": "recursion",
+  "recursive function": "recursion",
+  "recursive functions": "recursion",
+  // base case
+  "base case": "base_case_and_recursive_case",
+  "recursive case": "base_case_and_recursive_case",
+  "base case and recursive case": "base_case_and_recursive_case",
+  // stacks
+  "stack": "stacks",
+  "stacks": "stacks",
+  "lifo": "stacks",
+  // trees
+  "tree": "trees_intro",
+  "trees": "trees_intro",
+  "binary tree": "trees_intro",
+  "binary search tree": "trees_intro",
+  "bst": "trees_intro",
+  // tree traversal
+  "tree traversal": "tree_traversal",
+  "traversal": "tree_traversal",
+  "inorder": "tree_traversal",
+  "preorder": "tree_traversal",
+  "postorder": "tree_traversal",
+  "dfs": "tree_traversal",
+  "bfs": "tree_traversal",
+};
+
+function resolveNodeId(topic: string): string | null {
+  const t = topic.toLowerCase().trim();
+
+  // Exact match first
+  if (TOPIC_ALIASES[t]) return TOPIC_ALIASES[t];
+
+  // Partial containment match (longest alias wins to avoid "sort" matching "merge sort")
+  let best: { nodeId: string; len: number } | null = null;
+  for (const [alias, nodeId] of Object.entries(TOPIC_ALIASES)) {
+    if (t.includes(alias) || alias.includes(t)) {
+      if (!best || alias.length > best.len) {
+        best = { nodeId, len: alias.length };
+      }
+    }
+  }
+  return best?.nodeId ?? null;
+}
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface DiagnoseResult {
   askedTopic: string;
@@ -52,27 +181,52 @@ export interface DiagnoseResult {
 }
 
 interface QuestionInputProps {
+  /** Called immediately for learning requests with a resolved node — no API involved. */
+  onDirectLearn: (nodeId: string, topic: string) => void;
+  /** Called after /api/diagnose returns, for confusion/debugging requests. */
   onDiagnosed: (result: DiagnoseResult) => void;
 }
 
-export function QuestionInput({ onDiagnosed }: QuestionInputProps) {
+// ─── Component ────────────────────────────────────────────────────────────────
+
+export function QuestionInput({ onDirectLearn, onDiagnosed }: QuestionInputProps) {
   const [question, setQuestion] = useState("");
-  const [pendingIntent, setPendingIntent] = useState<QuestionIntent>("CONFUSED");
+  const [isResolvingLocally, setIsResolvingLocally] = useState(false);
   const diagnose = useDiagnose();
+
+  const isPending = diagnose.isPending || isResolvingLocally;
 
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!question.trim() || diagnose.isPending) return;
+    const q = question.trim();
+    if (!q || isPending) return;
 
-    const intent = detectIntent(question.trim());
-    setPendingIntent(intent);
+    const intent = detectIntent(q);
 
+    if (intent === "LEARN") {
+      const topic = extractTopic(q);
+      const nodeId = resolveNodeId(topic);
+
+      if (nodeId) {
+        // ✅ LEARN + matched node → skip the API entirely
+        setIsResolvingLocally(true);
+        // Use a microtask to let the loading state render before the parent re-renders
+        Promise.resolve().then(() => {
+          setIsResolvingLocally(false);
+          onDirectLearn(nodeId, topic);
+        });
+        return;
+      }
+      // LEARN but topic not in local graph → fall through to /diagnose as best-effort
+    }
+
+    // CONFUSED (or unrecognised LEARN topic) → call the diagnosis API
     diagnose.mutate(
-      { data: { question: question.trim() } },
+      { data: { question: q } },
       {
         onSuccess: (result) => {
           onDiagnosed({
-            askedTopic: result.asked_topic ?? question.trim(),
+            askedTopic: result.asked_topic ?? q,
             askedNodeId: result.asked_node_id ?? undefined,
             hypothesisNode: result.hypothesis_node,
             confusionType: (result as Record<string, unknown>).confusion_type as string ?? "",
@@ -95,7 +249,7 @@ export function QuestionInput({ onDiagnosed }: QuestionInputProps) {
           What are you stuck on?
         </h1>
         <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-          Describe what's confusing you, and we'll figure out exactly which concept you need to review.
+          Describe what's confusing you, or ask us to explain any concept.
         </p>
       </div>
 
@@ -106,9 +260,9 @@ export function QuestionInput({ onDiagnosed }: QuestionInputProps) {
               type="text"
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              placeholder="e.g. I keep getting index out of bounds in my loops..."
+              placeholder="e.g. What is an array? / I keep getting index out of bounds..."
               className="w-full pl-4 pr-16 py-4 text-lg bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-muted-foreground/60"
-              disabled={diagnose.isPending}
+              disabled={isPending}
             />
             <Button
               type="submit"
@@ -119,9 +273,9 @@ export function QuestionInput({ onDiagnosed }: QuestionInputProps) {
                   ? "bg-primary text-primary-foreground opacity-100 scale-100"
                   : "opacity-0 scale-95 pointer-events-none",
               )}
-              disabled={diagnose.isPending || !question.trim()}
+              disabled={isPending || !question.trim()}
             >
-              {diagnose.isPending ? (
+              {isPending ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <Send className="w-5 h-5" />
@@ -131,22 +285,22 @@ export function QuestionInput({ onDiagnosed }: QuestionInputProps) {
         </CardContent>
       </Card>
 
-      {diagnose.isPending && (
+      {isPending && (
         <div className="flex flex-col items-center justify-center py-12 text-muted-foreground animate-in fade-in duration-300">
           <div className="relative">
             <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full" />
             <Loader2 className="w-10 h-10 animate-spin text-primary relative z-10" />
           </div>
           <p className="mt-4 font-medium">
-            {pendingIntent === "LEARN" ? "Preparing your lesson…" : "Diagnosing your question…"}
+            {isResolvingLocally ? "Preparing your lesson…" : "Diagnosing your question…"}
           </p>
           <p className="text-sm text-muted-foreground/60 mt-1">
-            {pendingIntent === "LEARN" ? "Finding the right starting point" : "Identifying the root concept"}
+            {isResolvingLocally ? "Finding the right starting point" : "Identifying the root concept"}
           </p>
         </div>
       )}
 
-      {!diagnose.isPending && (
+      {!isPending && (
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground px-1">
             <Lightbulb className="w-4 h-4" />

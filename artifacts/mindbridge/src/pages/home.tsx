@@ -7,7 +7,7 @@ import { LearningModule } from "@/components/flow/LearningModule";
 import { ValidationCheck } from "@/components/flow/ValidationCheck";
 import { QuizPanel } from "@/components/flow/QuizPanel";
 import { SuccessScreen } from "@/components/flow/SuccessScreen";
-import { NODE_LABELS } from "@/lib/nodes";
+import { NODE_LABELS, NODE_PREREQUISITES } from "@/lib/nodes";
 
 // ─── Step machine ────────────────────────────────────────────────────────────
 
@@ -49,20 +49,16 @@ export default function Home() {
       <div className="w-full">
         {step.id === "INPUT" && (
           <QuestionInput
+            onDirectLearn={(nodeId, topic) => {
+              // Learning request ("What is X?") — resolved locally, no API call.
+              // Pick the first prerequisite (most fundamental) for the optional hint.
+              const prereqs = NODE_PREREQUISITES[nodeId] ?? [];
+              const prereqNodeId = prereqs[0] ?? nodeId; // falls back to self → hint hidden
+              setStep({ id: "DIRECT_LEARN", nodeId, askedTopic: topic, prereqNodeId });
+            }}
             onDiagnosed={(result) => {
-              if (result.intent === "LEARN") {
-                // Learning request: teach the asked topic directly, prereq check is optional after
-                const nodeId = result.askedNodeId ?? result.hypothesisNode;
-                setStep({
-                  id: "DIRECT_LEARN",
-                  nodeId,
-                  askedTopic: result.askedTopic,
-                  prereqNodeId: result.hypothesisNode,
-                });
-              } else {
-                // Confusion/debugging request: run the full diagnostic flow
-                setStep({ id: "DIAGNOSIS", diagnosis: result });
-              }
+              // Confusion/debugging request — came back from /api/diagnose
+              setStep({ id: "DIAGNOSIS", diagnosis: result });
             }}
           />
         )}
