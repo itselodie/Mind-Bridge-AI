@@ -20,8 +20,12 @@ const VALID_NODE_IDS = [
 ];
 
 const FALLBACK_NODE = "variables_and_data_types";
-const TIMEOUT_MS = 10_000;
-const MAX_JSON_RETRIES = 2; // only retry for truncated/malformed JSON
+const TIMEOUT_MS = 20_000; // gemini-2.5-flash can be slow under load
+const MAX_RETRIES = 4; // total attempts (covers both JSON failures and retryable HTTP errors)
+const BASE_RETRY_DELAY_MS = 800;
+
+// HTTP status codes that indicate a transient server-side problem worth retrying.
+const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504]);
 
 export interface DiagnosisResult {
   asked_topic: string;
@@ -104,26 +108,52 @@ async function callGeminiOnce(
 }
 
 /**
- * Attempt up to MAX_JSON_RETRIES times if the response is truncated/malformed JSON.
- * Any non-JSON error (rate limit, auth, timeout) throws immediately — no retry.
+ * Attempt up to MAX_RETRIES times, retrying on:
+ *   - Transient HTTP errors (429, 500, 502, 503, 504) with exponential backoff
+ *   - Truncated / malformed JSON with a short fixed delay
+ *
+ * Fatal errors (auth, bad request, etc.) are thrown immediately without retry.
  */
 async function callWithRetry(
   ai: GoogleGenAI,
   prompt: string,
 ): Promise<string> {
-  for (let attempt = 1; attempt <= MAX_JSON_RETRIES; attempt++) {
-    let rawText: string;
+  let lastErr: unknown;
 
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    // ── Step 1: call the API ────────────────────────────────────────────────
+    let rawText: string;
     try {
       rawText = await callGeminiOnce(ai, prompt);
     } catch (err) {
-      // Network/API/timeout error — don't retry, fail fast
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error(`[MindBridge] Gemini API error on attempt ${attempt}: ${msg}`);
-      throw err;
+      lastErr = err;
+      const status = (err as { status?: number }).status;
+      const isRetryable = status !== undefined && RETRYABLE_STATUS_CODES.has(status);
+
+      if (!isRetryable) {
+        // Auth failures, quota exceeded at account level, bad requests, etc. — fail fast.
+        console.error(
+          `[MindBridge] Gemini API error (status ${status ?? "unknown"}) — not retryable, giving up: ${err instanceof Error ? err.message : String(err)}`,
+        );
+        throw err;
+      }
+
+      if (attempt === MAX_RETRIES) {
+        console.error(
+          `[MindBridge] Gemini returned ${status} on all ${MAX_RETRIES} attempts — giving up`,
+        );
+        throw err;
+      }
+
+      const delay = BASE_RETRY_DELAY_MS * attempt; // 800 ms, 1600 ms, 2400 ms …
+      console.warn(
+        `[MindBridge] Gemini returned ${status} on attempt ${attempt}/${MAX_RETRIES} — retrying in ${delay} ms`,
+      );
+      await new Promise((r) => setTimeout(r, delay));
+      continue;
     }
 
-    // Strip accidental markdown fences
+    // ── Step 2: validate / parse JSON ──────────────────────────────────────
     const cleaned = rawText
       .replace(/^```(?:json)?\s*/i, "")
       .replace(/\s*```$/i, "")
@@ -132,10 +162,11 @@ async function callWithRetry(
     console.log(`[MindBridge] Raw response (attempt ${attempt}): ${cleaned}`);
 
     try {
-      JSON.parse(cleaned); // validate before returning
+      JSON.parse(cleaned);
       console.log("[MindBridge] JSON parsed successfully");
       return cleaned;
     } catch (parseErr) {
+      lastErr = parseErr;
       const msg = parseErr instanceof Error ? parseErr.message : String(parseErr);
       console.error(
         `[MindBridge] JSON parse failed on attempt ${attempt}: ${msg} | raw: ${cleaned}`,
@@ -145,18 +176,17 @@ async function callWithRetry(
         "[MindBridge] Truncated/malformed JSON from Gemini — retrying",
       );
 
-      if (attempt === MAX_JSON_RETRIES) {
+      if (attempt === MAX_RETRIES) {
         throw new Error(
-          `Gemini returned malformed JSON after ${MAX_JSON_RETRIES} attempts: ${msg}`,
+          `Gemini returned malformed JSON after ${MAX_RETRIES} attempts: ${msg}`,
         );
       }
 
-      // Short pause before retry (JSON truncation is usually transient)
       await new Promise((r) => setTimeout(r, 300));
     }
   }
 
-  throw new Error("Unreachable");
+  throw lastErr ?? new Error("Unreachable");
 }
 
 export async function diagnoseGap(question: string): Promise<DiagnosisResult> {
