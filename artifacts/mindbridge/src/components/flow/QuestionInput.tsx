@@ -75,6 +75,11 @@ function extractTopic(question: string): string {
  * Returns null when the topic is not in the local graph (caller falls back to /diagnose).
  */
 const TOPIC_ALIASES: Record<string, string> = {
+  // data structures (broad intro topic)
+  "data structure": "data_structures",
+  "data structures": "data_structures",
+  "data struct": "data_structures",
+  "ds": "data_structures",
   // variables
   "variable": "variables_and_data_types",
   "variables": "variables_and_data_types",

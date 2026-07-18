@@ -2,6 +2,7 @@ import { GoogleGenAI } from "@google/genai";
 import { logger } from "./logger";
 
 const VALID_NODE_IDS = [
+  "data_structures",
   "variables_and_data_types",
   "arrays",
   "loops",

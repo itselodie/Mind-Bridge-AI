@@ -1,5 +1,51 @@
 [
   {
+    "id": "data_structures",
+    "label": "Data Structures",
+    "prerequisites": ["variables_and_data_types"],
+    "teaching": {
+      "explanation": "A data structure is a way of organising values in memory so they can be stored, retrieved, and modified efficiently. Different problems need different structures: if you need instant access by position, use an array; if you need fast insertion at both ends, use a deque; if you need to undo operations, use a stack; if you need hierarchical relationships, use a tree. Every data structure makes a trade-off — arrays give O(1) access but O(n) insertion; linked lists give O(1) insertion at the head but O(n) access by index. Choosing the right structure for the problem is one of the most important skills in programming.",
+      "analogy": "Think of data structures as different types of containers in a kitchen. A shelf (array) lets you grab any item instantly if you know its position, but adding something in the middle means shifting everything along. A stack of plates (stack) only lets you take from the top. A filing cabinet (hash map) lets you find any folder immediately by its label. Each container is perfect for certain jobs and terrible for others — the skill is matching the container to the task."
+    },
+    "validation_question": {
+      "prompt": "Why do different problems require different data structures?",
+      "options": [
+        "Because some structures use less memory in every case",
+        "Because each structure makes trade-offs — optimising some operations at the cost of others",
+        "Because arrays are always the worst choice",
+        "Because trees are always the best choice"
+      ],
+      "correct": "Because each structure makes trade-offs — optimising some operations at the cost of others"
+    },
+    "quiz": [
+      {
+        "q": "Which data structure gives O(1) access by index but O(n) insertion in the middle?",
+        "options": ["Linked list", "Hash map", "Array", "Stack"],
+        "correct": 2
+      },
+      {
+        "q": "What does 'choosing the right data structure' mean in practice?",
+        "options": [
+          "Always picking the one that uses the least memory",
+          "Matching the structure's strengths to the operations your problem needs most",
+          "Using arrays for everything because they are the simplest",
+          "Picking the structure with the fewest lines of code"
+        ],
+        "correct": 1
+      },
+      {
+        "q": "A stack enforces which access pattern?",
+        "options": [
+          "First-In First-Out (FIFO)",
+          "Random access by index",
+          "Last-In First-Out (LIFO)",
+          "Sorted order"
+        ],
+        "correct": 2
+      }
+    ]
+  },
+  {
     "id": "variables_and_data_types",
     "label": "Variables & Data Types",
     "prerequisites": [],

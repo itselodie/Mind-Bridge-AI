@@ -6,6 +6,7 @@
  * without calling the API.
  */
 export const NODE_PREREQUISITES: Record<string, string[]> = {
+  data_structures:             ["variables_and_data_types"],
   variables_and_data_types:    [],
   arrays:                      ["variables_and_data_types"],
   loops:                       ["variables_and_data_types"],
@@ -24,6 +25,7 @@ export const NODE_PREREQUISITES: Record<string, string[]> = {
 };
 
 export const NODE_LABELS: Record<string, string> = {
+  data_structures: "Data Structures",
   variables_and_data_types: "Variables & Data Types",
   arrays: "Arrays",
   loops: "Loops",
@@ -63,6 +65,27 @@ export interface NodeContent {
 }
 
 export const NODE_CONTENT: Record<string, NodeContent> = {
+  data_structures: {
+    codeExample: `// Arrays — O(1) access by index
+const scores = [95, 87, 92];
+console.log(scores[1]); // 87
+
+// Stack — Last-In First-Out
+const stack = [];
+stack.push("A"); stack.push("B");
+stack.pop(); // "B" removed
+
+// Object (Hash Map) — O(1) lookup by key
+const lookup = { alice: 95, bob: 87 };
+console.log(lookup["alice"]); // 95
+
+// Each structure makes different trade-offs:
+// Array  → fast index access, slow middle insert
+// Stack  → fast push/pop, no random access
+// Hash   → fast key lookup, unordered`,
+    codeLanguage: "JavaScript",
+    keyTakeaway: "A data structure is a contract: it defines which operations are fast and which are slow. Picking the right one for your problem is what separates good code from slow code.",
+  },
   variables_and_data_types: {
     codeExample: `// Variables hold data of different types
 let name = "Alice";        // string
