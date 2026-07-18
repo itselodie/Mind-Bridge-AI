@@ -14,6 +14,8 @@ import { NODE_LABELS } from "@/lib/nodes";
 type Step =
   | { id: "INPUT" }
   | { id: "DIAGNOSIS"; diagnosis: DiagnoseResult }
+  // DIRECT_LEARN: student asked "What is X?" — teach X first, prereq check optional after
+  | { id: "DIRECT_LEARN"; nodeId: string; askedTopic: string; prereqNodeId: string }
   | { id: "LEARN"; nodeId: string; askedNodeId?: string; askedTopic: string }
   | { id: "KNOWLEDGE_CHECK"; nodeId: string }
   | { id: "QUIZ"; nodeId: string }
@@ -22,6 +24,7 @@ type Step =
 function toFlowStep(step: Step): FlowStepId | null {
   switch (step.id) {
     case "DIAGNOSIS":      return "DIAGNOSIS";
+    case "DIRECT_LEARN":   return "LEARN";
     case "LEARN":          return "LEARN";
     case "KNOWLEDGE_CHECK": return "PRACTICE";
     case "QUIZ":           return "QUIZ";
@@ -46,9 +49,21 @@ export default function Home() {
       <div className="w-full">
         {step.id === "INPUT" && (
           <QuestionInput
-            onDiagnosed={(result) =>
-              setStep({ id: "DIAGNOSIS", diagnosis: result })
-            }
+            onDiagnosed={(result) => {
+              if (result.intent === "LEARN") {
+                // Learning request: teach the asked topic directly, prereq check is optional after
+                const nodeId = result.askedNodeId ?? result.hypothesisNode;
+                setStep({
+                  id: "DIRECT_LEARN",
+                  nodeId,
+                  askedTopic: result.askedTopic,
+                  prereqNodeId: result.hypothesisNode,
+                });
+              } else {
+                // Confusion/debugging request: run the full diagnostic flow
+                setStep({ id: "DIAGNOSIS", diagnosis: result });
+              }
+            }}
           />
         )}
 
@@ -67,6 +82,30 @@ export default function Home() {
               })
             }
             onRestart={handleRestart}
+          />
+        )}
+
+        {step.id === "DIRECT_LEARN" && (
+          <LearningModule
+            nodeId={step.nodeId}
+            askedTopic={step.askedTopic}
+            isDirectLearn
+            prereqHintNodeId={step.prereqNodeId !== step.nodeId ? step.prereqNodeId : undefined}
+            prereqHintLabel={step.prereqNodeId !== step.nodeId ? (NODE_LABELS[step.prereqNodeId] ?? step.prereqNodeId) : undefined}
+            onCheckPrerequisites={
+              step.prereqNodeId !== step.nodeId
+                ? () =>
+                    setStep({
+                      id: "LEARN",
+                      nodeId: step.prereqNodeId,
+                      askedNodeId: step.nodeId,
+                      askedTopic: step.askedTopic,
+                    })
+                : undefined
+            }
+            onContinue={() =>
+              setStep({ id: "KNOWLEDGE_CHECK", nodeId: step.nodeId })
+            }
           />
         )}
 

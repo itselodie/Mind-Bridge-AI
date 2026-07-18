@@ -6,12 +6,40 @@ import { Lightbulb, Send, Loader2, BrainCircuit } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const EXAMPLES = [
+  "What is an array?",
   "I don't understand binary search",
-  "How does recursion work?",
+  "Explain recursion",
+  "My merge sort is failing",
   "What is Big-O?",
   "I'm confused about trees",
-  "Why do we need sorting?",
 ];
+
+export type QuestionIntent = "LEARN" | "CONFUSED";
+
+/**
+ * Classify the student's question as a learning request ("What is X?",
+ * "Explain X") or a confusion/debugging request ("I don't understand X").
+ * Defaults to CONFUSED so the existing diagnostic flow is unchanged when
+ * the intent is ambiguous.
+ */
+function detectIntent(question: string): QuestionIntent {
+  const q = question.toLowerCase().trim();
+  const learnPatterns = [
+    /^what (is|are|was|were|'s|does)\b/,
+    /^explain\b/,
+    /^tell me (about|what|how)\b/,
+    /^define\b/,
+    /^describe\b/,
+    /^teach me\b/,
+    /^how does\b/,
+    /^how do\b/,
+    /^show me\b/,
+    /^can you explain\b/,
+    /^can you teach\b/,
+    /^i (want|need|would like) to (learn|know|understand) (about |what |how )?\w/,
+  ];
+  return learnPatterns.some((p) => p.test(q)) ? "LEARN" : "CONFUSED";
+}
 
 export interface DiagnoseResult {
   askedTopic: string;
@@ -20,6 +48,7 @@ export interface DiagnoseResult {
   confusionType: string;
   confidence: number;
   fallback: boolean;
+  intent: QuestionIntent;
 }
 
 interface QuestionInputProps {
@@ -28,11 +57,15 @@ interface QuestionInputProps {
 
 export function QuestionInput({ onDiagnosed }: QuestionInputProps) {
   const [question, setQuestion] = useState("");
+  const [pendingIntent, setPendingIntent] = useState<QuestionIntent>("CONFUSED");
   const diagnose = useDiagnose();
 
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!question.trim() || diagnose.isPending) return;
+
+    const intent = detectIntent(question.trim());
+    setPendingIntent(intent);
 
     diagnose.mutate(
       { data: { question: question.trim() } },
@@ -45,6 +78,7 @@ export function QuestionInput({ onDiagnosed }: QuestionInputProps) {
             confusionType: (result as Record<string, unknown>).confusion_type as string ?? "",
             confidence: (result as Record<string, unknown>).confidence as number ?? 0.7,
             fallback: result.fallback ?? false,
+            intent,
           });
         },
       },
@@ -103,8 +137,12 @@ export function QuestionInput({ onDiagnosed }: QuestionInputProps) {
             <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full" />
             <Loader2 className="w-10 h-10 animate-spin text-primary relative z-10" />
           </div>
-          <p className="mt-4 font-medium">Diagnosing your question...</p>
-          <p className="text-sm text-muted-foreground/60 mt-1">Identifying the root concept</p>
+          <p className="mt-4 font-medium">
+            {pendingIntent === "LEARN" ? "Preparing your lesson…" : "Diagnosing your question…"}
+          </p>
+          <p className="text-sm text-muted-foreground/60 mt-1">
+            {pendingIntent === "LEARN" ? "Finding the right starting point" : "Identifying the root concept"}
+          </p>
         </div>
       )}
 

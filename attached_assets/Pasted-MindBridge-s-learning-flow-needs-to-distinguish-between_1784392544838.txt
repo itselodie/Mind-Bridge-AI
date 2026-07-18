@@ -1,0 +1,118 @@
+MindBridge's learning flow needs to distinguish between two different user intents.
+
+## Intent 1 — Learning Request
+
+Examples:
+- What is an array?
+- Tell me about trees.
+- Explain recursion.
+- Define stack.
+- Teach me linked lists.
+- What is binary search?
+
+For these requests:
+
+1. DO NOT immediately diagnose missing prerequisites.
+
+2. First teach the requested topic completely.
+
+The lesson must include:
+
+- Clear definition
+- Why it exists
+- Real-world intuition
+- Analogy
+- Syntax / code example
+- Step-by-step explanation
+- Common mistakes
+- Time & Space Complexity (if applicable)
+- Practical applications
+
+Only AFTER the requested topic has been fully explained should MindBridge identify possible prerequisite gaps.
+
+For example:
+
+Student:
+"What is an array?"
+
+Correct flow:
+
+1. Explain what an array is.
+
+2. Explain how arrays work.
+
+3. Show a JavaScript example.
+
+4. Explain memory layout.
+
+5. Give analogy.
+
+6. THEN say:
+
+"Arrays rely on Variables and Data Types. If you're not confident with those concepts, we can quickly review them."
+
+Then show a button:
+
+"Check if I'm missing prerequisite knowledge"
+
+The prerequisite diagnosis should be optional.
+
+Never interrupt the lesson with prerequisite diagnosis.
+
+------------------------------------------------
+
+## Intent 2 — Confusion / Debugging Request
+
+Examples:
+
+- I don't understand binary search.
+- My recursion isn't working.
+- Why do I get stack overflow?
+- My merge sort is failing.
+- DFS skips nodes.
+- Why is my queue overflowing?
+- Binary search always returns -1.
+
+For these requests:
+
+Use MindBridge's diagnostic engine.
+
+Determine:
+
+- confusion_type
+- asked_topic
+- hypothesis_node
+- confidence
+
+Validate the hypothesis.
+
+Teach the missing prerequisite.
+
+Reconnect that prerequisite back to the original topic.
+
+Then quiz.
+
+This is the existing MindBridge flow.
+
+------------------------------------------------
+
+Summary
+
+Learning request
+
+→ Teach first
+→ Diagnose later (optional)
+
+Confusion request
+
+→ Diagnose first
+→ Validate
+→ Teach prerequisite
+→ Connect back
+→ Quiz
+
+This distinction is essential to the educational philosophy of MindBridge.
+
+MindBridge should never assume someone asking "What is X?" is confused.
+
+They may simply be learning for the first time.

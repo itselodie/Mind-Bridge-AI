@@ -13,16 +13,22 @@ import {
   HelpCircle,
   Link2,
   AlertTriangle,
+  SearchCheck,
 } from "lucide-react";
 import { InteractiveVisual } from "./InteractiveVisual";
 import { NODE_CONTENT } from "@/lib/nodes";
 import { cn } from "@/lib/utils";
 
 interface LearningModuleProps {
-  nodeId: string;            // prerequisite node (the gap)
-  askedNodeId?: string;      // original topic the student asked about
+  nodeId: string;            // node to teach
+  askedNodeId?: string;      // original topic the student asked about (confusion flow only)
   askedTopic: string;        // human-readable topic string
   onContinue: () => void;
+  // Direct-learn mode (learning request, e.g. "What is X?")
+  isDirectLearn?: boolean;
+  prereqHintLabel?: string;  // label of the optional prerequisite to surface
+  prereqHintNodeId?: string; // node id of that prerequisite
+  onCheckPrerequisites?: () => void; // called when student opts into prereq review
 }
 
 // ─── Section wrapper ──────────────────────────────────────────────────────────
@@ -86,7 +92,15 @@ function CodeBlock({ code, language }: { code: string; language?: string }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function LearningModule({ nodeId, askedNodeId, askedTopic, onContinue }: LearningModuleProps) {
+export function LearningModule({
+  nodeId,
+  askedNodeId,
+  askedTopic,
+  onContinue,
+  isDirectLearn,
+  prereqHintLabel,
+  onCheckPrerequisites,
+}: LearningModuleProps) {
   const [isStarting, setIsStarting] = useState(false);
 
   const teachQuery = useTeach({
@@ -250,6 +264,28 @@ export function LearningModule({ nodeId, askedNodeId, askedTopic, onContinue }: 
             {connection}
           </p>
         </Section>
+      )}
+
+      {/* ── Optional prereq hint (direct-learn mode only) ─────────────── */}
+      {isDirectLearn && prereqHintLabel && onCheckPrerequisites && (
+        <div className="rounded-2xl border-2 border-muted bg-muted/40 p-6 space-y-4">
+          <div className="flex items-start gap-3">
+            <SearchCheck className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+            <p className="text-foreground/80 leading-relaxed">
+              <span className="font-semibold text-foreground">{prereqLabel}</span> relies on{" "}
+              <span className="font-semibold text-foreground">{prereqHintLabel}</span>. If
+              you&apos;re not confident with that concept yet, you can quickly review it now.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            onClick={onCheckPrerequisites}
+            className="gap-2 w-full sm:w-auto"
+          >
+            <SearchCheck className="w-4 h-4" />
+            Check if I&apos;m missing prerequisite knowledge
+          </Button>
+        </div>
       )}
 
       {/* ── Continue CTA ──────────────────────────────────────────────── */}
