@@ -17,5 +17,6 @@ export * from './progressResult';
 export * from './quizQuestion';
 export * from './quizResult';
 export * from './teachingContent';
+export * from './teachInput';
 export * from './topicProgress';
 export * from './validationQuestion';

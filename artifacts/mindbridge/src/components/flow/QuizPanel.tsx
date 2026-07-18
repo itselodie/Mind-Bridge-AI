@@ -1,38 +1,32 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
 import { useQuiz } from "@workspace/api-client-react";
 import { useMasteryContext } from "@/context/MasteryContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, CheckCircle2, XCircle, Trophy, ArrowRight, RotateCcw } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, ArrowRight, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface QuizPanelProps {
   nodeId: string;
-  onRestart: () => void;
+  onComplete: (score: number, total: number) => void;
 }
 
-export function QuizPanel({ nodeId, onRestart }: QuizPanelProps) {
-  const [, setLocation] = useLocation();
+export function QuizPanel({ nodeId, onComplete }: QuizPanelProps) {
   const { updateMastery } = useMasteryContext();
   const [isStarting, setIsStarting] = useState(false);
-  
-  // State for quiz taking
+
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isRevealed, setIsRevealed] = useState(false);
   const [score, setScore] = useState(0);
-  const [isCompleted, setIsCompleted] = useState(false);
-  
+
   const quizQuery = useQuiz({
     mutation: {
-      onSuccess: () => {
-        setIsStarting(false);
-      }
-    }
+      onSuccess: () => setIsStarting(false),
+    },
   });
 
-  // Start query on mount
+  // Fire on mount
   if (!quizQuery.data && !quizQuery.isPending && !isStarting) {
     setIsStarting(true);
     quizQuery.mutate({ data: { node_id: nodeId } });
@@ -49,9 +43,12 @@ export function QuizPanel({ nodeId, onRestart }: QuizPanelProps) {
 
   if (quizQuery.isError || !quizQuery.data) {
     return (
-      <div className="text-center py-12 text-destructive">
-        <p>Failed to load quiz.</p>
-        <Button onClick={() => quizQuery.mutate({ data: { node_id: nodeId } })} className="mt-4">
+      <div className="text-center py-12 space-y-4">
+        <div className="inline-flex items-center gap-2 text-destructive">
+          <AlertCircle className="w-5 h-5" />
+          <p>Failed to load quiz.</p>
+        </div>
+        <Button onClick={() => quizQuery.mutate({ data: { node_id: nodeId } })}>
           Retry
         </Button>
       </div>
@@ -59,89 +56,57 @@ export function QuizPanel({ nodeId, onRestart }: QuizPanelProps) {
   }
 
   const { quiz, label } = quizQuery.data;
-  
+  const currentQ = quiz[currentQuestionIdx];
+  const progressPct = (currentQuestionIdx / quiz.length) * 100;
+
   const handleSelect = (idx: number) => {
     if (isRevealed) return;
     setSelectedOption(idx);
     setIsRevealed(true);
-    
-    const isCorrect = idx === quiz[currentQuestionIdx].correct;
-    if (isCorrect) {
-      setScore(s => s + 1);
+    if (idx === currentQ.correct) {
+      setScore((s) => s + 1);
     }
   };
 
   const handleNext = () => {
     if (currentQuestionIdx < quiz.length - 1) {
-      setCurrentQuestionIdx(idx => idx + 1);
+      setCurrentQuestionIdx((i) => i + 1);
       setSelectedOption(null);
       setIsRevealed(false);
     } else {
-      // Finish quiz
-      const finalScore = score + (selectedOption === quiz[currentQuestionIdx].correct ? 1 : 0);
-      const masteryRatio = finalScore / quiz.length;
+      // Last question — compute final score including current answer
+      const isLastCorrect = selectedOption === currentQ.correct;
+      const finalScore = score + (isLastCorrect ? 0 : 0); // already counted in handleSelect
+      const masteryRatio = score / quiz.length;
       updateMastery(nodeId, masteryRatio);
-      setIsCompleted(true);
+      onComplete(score, quiz.length);
     }
   };
 
-  if (isCompleted) {
-    const ratio = score / quiz.length;
-    const isMastered = ratio >= 0.7;
-    
-    return (
-      <div className="text-center space-y-8 animate-in zoom-in-95 duration-500 max-w-lg mx-auto py-10">
-        <div className={cn(
-          "inline-flex items-center justify-center p-6 rounded-full",
-          isMastered ? "bg-chart-1/20 text-chart-1" : "bg-chart-2/20 text-chart-2"
-        )}>
-          <Trophy className="w-16 h-16" />
-        </div>
-        
-        <div className="space-y-4">
-          <h2 className="text-3xl font-bold">
-            {isMastered ? "Great job!" : "Good effort!"}
-          </h2>
-          <p className="text-xl text-muted-foreground">
-            You got <span className="font-bold text-foreground">{score}/{quiz.length}</span> correct
-          </p>
-          <div className="inline-block px-4 py-2 bg-secondary rounded-lg font-medium text-sm">
-            {label} mastery updated
-          </div>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
-          <Button variant="outline" size="lg" onClick={onRestart} className="gap-2">
-            <RotateCcw className="w-4 h-4" /> Study another topic
-          </Button>
-          <Button size="lg" onClick={() => setLocation('/dashboard')} className="gap-2">
-            View my progress <ArrowRight className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  const currentQ = quiz[currentQuestionIdx];
-
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 max-w-2xl mx-auto">
-      <div className="flex items-center justify-between">
-        <div className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">
-          {label} — Question {currentQuestionIdx + 1} of {quiz.length}
+    <div className="space-y-6 animate-in fade-in duration-500 max-w-2xl mx-auto">
+
+      {/* Header */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between text-sm">
+          <span className="font-semibold text-muted-foreground uppercase tracking-wide">
+            {label} — Question {currentQuestionIdx + 1} of {quiz.length}
+          </span>
+          <span className="font-bold text-foreground">
+            {score} correct
+          </span>
         </div>
-        <div className="text-sm font-medium">
-          Score: {score}
+
+        {/* Progress bar */}
+        <div className="w-full h-2.5 bg-secondary rounded-full overflow-hidden">
+          <div
+            className="h-full bg-primary transition-all duration-500 ease-out rounded-full"
+            style={{ width: `${progressPct}%` }}
+          />
         </div>
       </div>
 
-      <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
-        <div 
-          className="h-full bg-primary transition-all duration-500 ease-out"
-          style={{ width: `${(currentQuestionIdx / quiz.length) * 100}%` }}
-        />
-      </div>
-
+      {/* Question card */}
       <Card className="border-2 shadow-sm overflow-hidden">
         <div className="bg-secondary/30 p-6 md:p-8 border-b">
           <p className="text-xl font-medium leading-relaxed">{currentQ.q}</p>
@@ -150,20 +115,21 @@ export function QuizPanel({ nodeId, onRestart }: QuizPanelProps) {
           <div className="space-y-3">
             {currentQ.options.map((option, idx) => {
               const isSelected = selectedOption === idx;
-              const isCorrect = idx === currentQ.correct;
-              
-              let stateClass = "border-border hover:border-primary hover:bg-secondary/50";
+              const isCorrectOpt = idx === currentQ.correct;
+
+              let stateClass =
+                "border-border hover:border-primary hover:bg-secondary/50 cursor-pointer";
               let Icon = null;
-              
+
               if (isRevealed) {
-                if (isCorrect) {
+                if (isCorrectOpt) {
                   stateClass = "border-chart-1 bg-chart-1/10 text-chart-1";
                   Icon = CheckCircle2;
-                } else if (isSelected && !isCorrect) {
+                } else if (isSelected && !isCorrectOpt) {
                   stateClass = "border-destructive bg-destructive/10 text-destructive";
                   Icon = XCircle;
                 } else {
-                  stateClass = "border-border opacity-40";
+                  stateClass = "border-border opacity-40 cursor-default";
                 }
               } else if (isSelected) {
                 stateClass = "border-primary bg-primary/5 text-primary ring-1 ring-primary";
@@ -176,10 +142,11 @@ export function QuizPanel({ nodeId, onRestart }: QuizPanelProps) {
                   disabled={isRevealed}
                   className={cn(
                     "w-full text-left p-4 rounded-xl border-2 transition-all duration-200 flex items-center justify-between",
-                    stateClass
+                    stateClass,
+                    isRevealed && "cursor-default",
                   )}
                 >
-                  <span className={cn("font-medium", isRevealed && isCorrect && "text-chart-1 font-semibold")}>
+                  <span className={cn("font-medium", isRevealed && isCorrectOpt && "font-semibold")}>
                     {option}
                   </span>
                   {Icon && <Icon className="w-5 h-5 flex-shrink-0" />}
@@ -192,8 +159,9 @@ export function QuizPanel({ nodeId, onRestart }: QuizPanelProps) {
 
       {isRevealed && (
         <div className="flex justify-end animate-in fade-in duration-300 slide-in-from-bottom-2">
-          <Button size="lg" onClick={handleNext} className="gap-2 px-8">
-            {currentQuestionIdx < quiz.length - 1 ? "Next Question" : "Finish Quiz"} <ArrowRight className="w-4 h-4" />
+          <Button size="lg" onClick={handleNext} className="gap-2 px-8 rounded-xl">
+            {currentQuestionIdx < quiz.length - 1 ? "Next Question" : "Finish Quiz"}
+            <ArrowRight className="w-4 h-4" />
           </Button>
         </div>
       )}

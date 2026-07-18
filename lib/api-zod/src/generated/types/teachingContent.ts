@@ -7,8 +7,22 @@
  */
 
 export interface TeachingContent {
+  /** The prerequisite node id */
   node_id: string;
+  /** The prerequisite node label */
   label: string;
+  /** Explanation of the prerequisite concept */
   explanation: string;
+  /** Real-world analogy for the prerequisite concept */
   analogy: string;
+  /** Node id for the topic the student originally asked about */
+  original_topic_node_id?: string;
+  /** Label of the topic originally asked about */
+  original_topic_label?: string;
+  /** Beginner-friendly explanation of the originally asked topic */
+  original_topic_explanation?: string;
+  /** Analogy for the originally asked topic */
+  original_topic_analogy?: string;
+  /** Sentence(s) explaining how the prerequisite relates back to the original topic */
+  connection?: string;
 }

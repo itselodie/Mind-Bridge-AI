@@ -30,6 +30,7 @@ export const DiagnoseBody = zod.object({
 
 export const DiagnoseResponse = zod.object({
   "asked_topic": zod.string().describe('The topic the student appears to be asking about'),
+  "asked_node_id": zod.string().optional().describe('The graph node id that best matches what the student asked about (may differ from hypothesis_node)'),
   "hypothesis_node": zod.string().describe('The node id of the hypothesized missing prerequisite'),
   "confidence": zod.number().describe('LLM confidence score 0.0–1.0'),
   "fallback": zod.boolean().describe('True if the LLM call failed and a fallback node was used')
@@ -54,18 +55,24 @@ export const ValidateResponse = zod.object({
 
 
 /**
- * Returns explanation and analogy for the confirmed gap node (no LLM call).
- * @summary Get teaching content for a confirmed node
+ * Returns the four-section lesson — original topic intro, diagnosis bridge, prerequisite lesson, and concept connection. No LLM call.
+ * @summary Get four-section teaching content
  */
 export const TeachBody = zod.object({
-  "node_id": zod.string().describe('The graph node id')
+  "node_id": zod.string().describe('The prerequisite node id (the gap to teach)'),
+  "asked_node_id": zod.string().optional().describe('The node id the student originally asked about (optional — used to generate the four-section lesson)')
 })
 
 export const TeachResponse = zod.object({
-  "node_id": zod.string(),
-  "label": zod.string(),
-  "explanation": zod.string(),
-  "analogy": zod.string()
+  "node_id": zod.string().describe('The prerequisite node id'),
+  "label": zod.string().describe('The prerequisite node label'),
+  "explanation": zod.string().describe('Explanation of the prerequisite concept'),
+  "analogy": zod.string().describe('Real-world analogy for the prerequisite concept'),
+  "original_topic_node_id": zod.string().optional().describe('Node id for the topic the student originally asked about'),
+  "original_topic_label": zod.string().optional().describe('Label of the topic originally asked about'),
+  "original_topic_explanation": zod.string().optional().describe('Beginner-friendly explanation of the originally asked topic'),
+  "original_topic_analogy": zod.string().optional().describe('Analogy for the originally asked topic'),
+  "connection": zod.string().optional().describe('Sentence(s) explaining how the prerequisite relates back to the original topic')
 })
 
 

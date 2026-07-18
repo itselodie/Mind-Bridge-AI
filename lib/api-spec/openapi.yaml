@@ -79,14 +79,14 @@ paths:
     post:
       operationId: teach
       tags: [mindbridge]
-      summary: Get teaching content for a confirmed node
-      description: Returns explanation and analogy for the confirmed gap node (no LLM call).
+      summary: Get four-section teaching content
+      description: Returns the four-section lesson — original topic intro, diagnosis bridge, prerequisite lesson, and concept connection. No LLM call.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/NodeInput"
+              $ref: "#/components/schemas/TeachInput"
       responses:
         "200":
           description: Teaching content
@@ -176,6 +176,9 @@ components:
         asked_topic:
           type: string
           description: The topic the student appears to be asking about
+        asked_node_id:
+          type: string
+          description: The graph node id that best matches what the student asked about (may differ from hypothesis_node)
         hypothesis_node:
           type: string
           description: The node id of the hypothesized missing prerequisite
@@ -193,6 +196,17 @@ components:
         node_id:
           type: string
           description: The graph node id
+
+    TeachInput:
+      type: object
+      required: [node_id]
+      properties:
+        node_id:
+          type: string
+          description: The prerequisite node id (the gap to teach)
+        asked_node_id:
+          type: string
+          description: The node id the student originally asked about (optional — used to generate the four-section lesson)
 
     ValidationQuestion:
       type: object
@@ -217,12 +231,31 @@ components:
       properties:
         node_id:
           type: string
+          description: The prerequisite node id
         label:
           type: string
+          description: The prerequisite node label
         explanation:
           type: string
+          description: Explanation of the prerequisite concept
         analogy:
           type: string
+          description: Real-world analogy for the prerequisite concept
+        original_topic_node_id:
+          type: string
+          description: Node id for the topic the student originally asked about
+        original_topic_label:
+          type: string
+          description: Label of the topic originally asked about
+        original_topic_explanation:
+          type: string
+          description: Beginner-friendly explanation of the originally asked topic
+        original_topic_analogy:
+          type: string
+          description: Analogy for the originally asked topic
+        connection:
+          type: string
+          description: Sentence(s) explaining how the prerequisite relates back to the original topic
 
     QuizQuestion:
       type: object

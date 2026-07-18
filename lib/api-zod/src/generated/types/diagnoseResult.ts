@@ -9,6 +9,8 @@
 export interface DiagnoseResult {
   /** The topic the student appears to be asking about */
   asked_topic: string;
+  /** The graph node id that best matches what the student asked about (may differ from hypothesis_node) */
+  asked_node_id?: string;
   /** The node id of the hypothesized missing prerequisite */
   hypothesis_node: string;
   /** LLM confidence score 0.0–1.0 */

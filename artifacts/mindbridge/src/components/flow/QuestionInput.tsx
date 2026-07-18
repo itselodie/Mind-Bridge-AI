@@ -10,11 +10,20 @@ const EXAMPLES = [
   "How does recursion work?",
   "What is Big-O?",
   "I'm confused about trees",
-  "Why do we need sorting?"
+  "Why do we need sorting?",
 ];
 
+export interface DiagnoseResult {
+  askedTopic: string;
+  askedNodeId?: string;
+  hypothesisNode: string;
+  confusionType: string;
+  confidence: number;
+  fallback: boolean;
+}
+
 interface QuestionInputProps {
-  onDiagnosed: (hypothesisNode: string, label: string, fallback: boolean) => void;
+  onDiagnosed: (result: DiagnoseResult) => void;
 }
 
 export function QuestionInput({ onDiagnosed }: QuestionInputProps) {
@@ -29,9 +38,16 @@ export function QuestionInput({ onDiagnosed }: QuestionInputProps) {
       { data: { question: question.trim() } },
       {
         onSuccess: (result) => {
-          onDiagnosed(result.hypothesis_node, result.asked_topic, result.fallback);
-        }
-      }
+          onDiagnosed({
+            askedTopic: result.asked_topic ?? question.trim(),
+            askedNodeId: result.asked_node_id ?? undefined,
+            hypothesisNode: result.hypothesis_node,
+            confusionType: (result as Record<string, unknown>).confusion_type as string ?? "",
+            confidence: (result as Record<string, unknown>).confidence as number ?? 0.7,
+            fallback: result.fallback ?? false,
+          });
+        },
+      },
     );
   };
 
@@ -60,16 +76,22 @@ export function QuestionInput({ onDiagnosed }: QuestionInputProps) {
               className="w-full pl-4 pr-16 py-4 text-lg bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-muted-foreground/60"
               disabled={diagnose.isPending}
             />
-            <Button 
-              type="submit" 
-              size="icon" 
+            <Button
+              type="submit"
+              size="icon"
               className={cn(
                 "absolute right-2 rounded-xl transition-all duration-300",
-                question.trim() ? "bg-primary text-primary-foreground opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
+                question.trim()
+                  ? "bg-primary text-primary-foreground opacity-100 scale-100"
+                  : "opacity-0 scale-95 pointer-events-none",
               )}
               disabled={diagnose.isPending || !question.trim()}
             >
-              {diagnose.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+              {diagnose.isPending ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Send className="w-5 h-5" />
+              )}
             </Button>
           </form>
         </CardContent>
@@ -78,10 +100,11 @@ export function QuestionInput({ onDiagnosed }: QuestionInputProps) {
       {diagnose.isPending && (
         <div className="flex flex-col items-center justify-center py-12 text-muted-foreground animate-in fade-in duration-300">
           <div className="relative">
-            <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full"></div>
+            <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full" />
             <Loader2 className="w-10 h-10 animate-spin text-primary relative z-10" />
           </div>
           <p className="mt-4 font-medium">Diagnosing your question...</p>
+          <p className="text-sm text-muted-foreground/60 mt-1">Identifying the root concept</p>
         </div>
       )}
 
@@ -95,9 +118,7 @@ export function QuestionInput({ onDiagnosed }: QuestionInputProps) {
             {EXAMPLES.map((example) => (
               <button
                 key={example}
-                onClick={() => {
-                  setQuestion(example);
-                }}
+                onClick={() => setQuestion(example)}
                 className="px-4 py-2.5 rounded-full text-sm font-medium bg-secondary text-secondary-foreground hover:bg-primary hover:text-primary-foreground transition-all duration-200 border border-border"
               >
                 {example}

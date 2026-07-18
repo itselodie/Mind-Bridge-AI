@@ -20,6 +20,8 @@ export interface DiagnoseInput {
 export interface DiagnoseResult {
   /** The topic the student appears to be asking about */
   asked_topic: string;
+  /** The graph node id that best matches what the student asked about (may differ from hypothesis_node) */
+  asked_node_id?: string;
   /** The node id of the hypothesized missing prerequisite */
   hypothesis_node: string;
   /** LLM confidence score 0.0–1.0 */
@@ -33,6 +35,13 @@ export interface NodeInput {
   node_id: string;
 }
 
+export interface TeachInput {
+  /** The prerequisite node id (the gap to teach) */
+  node_id: string;
+  /** The node id the student originally asked about (optional — used to generate the four-section lesson) */
+  asked_node_id?: string;
+}
+
 export interface ValidationQuestion {
   node_id: string;
   label: string;
@@ -42,10 +51,24 @@ export interface ValidationQuestion {
 }
 
 export interface TeachingContent {
+  /** The prerequisite node id */
   node_id: string;
+  /** The prerequisite node label */
   label: string;
+  /** Explanation of the prerequisite concept */
   explanation: string;
+  /** Real-world analogy for the prerequisite concept */
   analogy: string;
+  /** Node id for the topic the student originally asked about */
+  original_topic_node_id?: string;
+  /** Label of the topic originally asked about */
+  original_topic_label?: string;
+  /** Beginner-friendly explanation of the originally asked topic */
+  original_topic_explanation?: string;
+  /** Analogy for the originally asked topic */
+  original_topic_analogy?: string;
+  /** Sentence(s) explaining how the prerequisite relates back to the original topic */
+  connection?: string;
 }
 
 export interface QuizQuestion {

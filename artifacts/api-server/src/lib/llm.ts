@@ -25,6 +25,7 @@ const MAX_JSON_RETRIES = 2; // only retry for truncated/malformed JSON
 
 export interface DiagnosisResult {
   asked_topic: string;
+  asked_node_id?: string;
   hypothesis_node: string;
   confusion_type: string;
   confidence: number;
@@ -45,15 +46,22 @@ function buildPrompt(question: string): string {
 
 A student wrote: "${question}"
 
-Identify which foundational DSA concept they are actually struggling with — the underlying prerequisite that is likely missing, not just what they asked about.
+Your job:
+1. Identify the topic the student is asking about (asked_node_id) — which node in our graph best matches what they mentioned.
+2. Identify the underlying prerequisite that is likely missing (hypothesis_node) — this may be the same node or a prerequisite of it.
 
 Respond with ONLY valid JSON (no markdown, no explanation):
-{"asked_topic": "<topic the student mentioned>", "hypothesis_node": "<node_id>", "confusion_type": "<brief type of confusion>", "confidence": <0.0-1.0>}
+{"asked_topic": "<topic the student mentioned>", "asked_node_id": "<node_id>", "hypothesis_node": "<node_id>", "confusion_type": "<brief type of confusion>", "confidence": <0.0-1.0>}
 
-The hypothesis_node MUST be one of these exact ids:
+Both asked_node_id and hypothesis_node MUST be one of these exact ids:
 ${VALID_NODE_IDS.join(", ")}
 
-Example: for "I don't understand binary search" → hypothesis_node might be "sorted_arrays" or "divide_and_conquer".`;
+Rules:
+- asked_node_id is the node that matches what the student asked about.
+- hypothesis_node is the prerequisite concept they are probably missing. It should be a prerequisite OF the asked_node_id when possible.
+- If the student is asking about a foundational concept with no prerequisites, asked_node_id and hypothesis_node may be the same.
+
+Example: for "I don't understand binary search" → asked_node_id: "binary_search", hypothesis_node: "sorted_arrays" (a prerequisite of binary_search).`;
 }
 
 /**
@@ -163,6 +171,7 @@ export async function diagnoseGap(question: string): Promise<DiagnosisResult> {
 
     const parsed = JSON.parse(cleanedJson) as {
       asked_topic?: unknown;
+      asked_node_id?: unknown;
       hypothesis_node?: unknown;
       confusion_type?: unknown;
       confidence?: unknown;
@@ -187,9 +196,16 @@ export async function diagnoseGap(question: string): Promise<DiagnosisResult> {
         ? parsed.confusion_type
         : "conceptual misunderstanding";
 
+    const askedNodeId =
+      typeof parsed.asked_node_id === "string" &&
+      VALID_NODE_IDS.includes(parsed.asked_node_id)
+        ? parsed.asked_node_id
+        : undefined;
+
     const result: DiagnosisResult = {
       asked_topic:
         typeof parsed.asked_topic === "string" ? parsed.asked_topic : question,
+      asked_node_id: askedNodeId,
       hypothesis_node: hypothesisNode,
       confusion_type: confusionType,
       confidence,

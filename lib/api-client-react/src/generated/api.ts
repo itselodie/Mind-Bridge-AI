@@ -28,6 +28,7 @@ import type {
   NodeInput,
   ProgressResult,
   QuizResult,
+  TeachInput,
   TeachingContent,
   ValidationQuestion
 } from './api.schemas';
@@ -290,17 +291,17 @@ export const getTeachUrl = () => {
 }
 
 /**
- * Returns explanation and analogy for the confirmed gap node (no LLM call).
- * @summary Get teaching content for a confirmed node
+ * Returns the four-section lesson — original topic intro, diagnosis bridge, prerequisite lesson, and concept connection. No LLM call.
+ * @summary Get four-section teaching content
  */
-export const teach = async (nodeInput: NodeInput, options?: RequestInit): Promise<TeachingContent> => {
+export const teach = async (teachInput: TeachInput, options?: RequestInit): Promise<TeachingContent> => {
 
   return customFetch<TeachingContent>(getTeachUrl(),
   {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(nodeInput)
+    body: JSON.stringify(teachInput)
   }
 );}
 
@@ -309,8 +310,8 @@ export const teach = async (nodeInput: NodeInput, options?: RequestInit): Promis
 
 
 export const getTeachMutationOptions = <TError = ErrorType<ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teach>>, TError,{data: BodyType<NodeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof teach>>, TError,{data: BodyType<NodeInput>}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teach>>, TError,{data: BodyType<TeachInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof teach>>, TError,{data: BodyType<TeachInput>}, TContext> => {
 
 const mutationKey = ['teach'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -322,7 +323,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof teach>>, {data: BodyType<NodeInput>}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof teach>>, {data: BodyType<TeachInput>}> = (props) => {
           const {data} = props ?? {};
 
           return  teach(data,requestOptions)
@@ -336,18 +337,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type TeachMutationResult = NonNullable<Awaited<ReturnType<typeof teach>>>
-    export type TeachMutationBody = BodyType<NodeInput>
+    export type TeachMutationBody = BodyType<TeachInput>
     export type TeachMutationError = ErrorType<ErrorResponse>
 
     /**
- * @summary Get teaching content for a confirmed node
+ * @summary Get four-section teaching content
  */
 export const useTeach = <TError = ErrorType<ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teach>>, TError,{data: BodyType<NodeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof teach>>, TError,{data: BodyType<TeachInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof teach>>,
         TError,
-        {data: BodyType<NodeInput>},
+        {data: BodyType<TeachInput>},
         TContext
       > => {
       return useMutation(getTeachMutationOptions(options));

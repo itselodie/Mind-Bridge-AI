@@ -1,91 +1,110 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout";
-import { QuestionInput } from "@/components/flow/QuestionInput";
+import { FlowProgress, type FlowStepId } from "@/components/flow/FlowProgress";
+import { QuestionInput, type DiagnoseResult } from "@/components/flow/QuestionInput";
+import { DiagnosisScreen } from "@/components/flow/DiagnosisScreen";
+import { LearningModule } from "@/components/flow/LearningModule";
 import { ValidationCheck } from "@/components/flow/ValidationCheck";
-import { Explanation } from "@/components/flow/Explanation";
 import { QuizPanel } from "@/components/flow/QuizPanel";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Target, AlertCircle } from "lucide-react";
+import { SuccessScreen } from "@/components/flow/SuccessScreen";
+import { NODE_LABELS } from "@/lib/nodes";
 
-type Step = 
-  | { id: 'INPUT' }
-  | { id: 'DIAGNOSIS_RESULT', nodeId: string, label: string, fallback: boolean }
-  | { id: 'VALIDATING', nodeId: string }
-  | { id: 'EXPLANATION', nodeId: string }
-  | { id: 'QUIZ', nodeId: string };
+// ─── Step machine ────────────────────────────────────────────────────────────
+
+type Step =
+  | { id: "INPUT" }
+  | { id: "DIAGNOSIS"; diagnosis: DiagnoseResult }
+  | { id: "LEARN"; nodeId: string; askedNodeId?: string; askedTopic: string }
+  | { id: "KNOWLEDGE_CHECK"; nodeId: string }
+  | { id: "QUIZ"; nodeId: string }
+  | { id: "SUCCESS"; nodeId: string; score: number; total: number };
+
+function toFlowStep(step: Step): FlowStepId | null {
+  switch (step.id) {
+    case "DIAGNOSIS":      return "DIAGNOSIS";
+    case "LEARN":          return "LEARN";
+    case "KNOWLEDGE_CHECK": return "PRACTICE";
+    case "QUIZ":           return "QUIZ";
+    case "SUCCESS":        return "SUCCESS";
+    default:               return null;
+  }
+}
+
+// ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function Home() {
-  const [step, setStep] = useState<Step>({ id: 'INPUT' });
+  const [step, setStep] = useState<Step>({ id: "INPUT" });
 
-  const handleDiagnosed = (nodeId: string, label: string, fallback: boolean) => {
-    setStep({ id: 'DIAGNOSIS_RESULT', nodeId, label, fallback });
-  };
+  const handleRestart = () => setStep({ id: "INPUT" });
 
-  const handleRestart = () => {
-    setStep({ id: 'INPUT' });
-  };
+  const flowStep = toFlowStep(step);
 
   return (
     <Layout>
+      {flowStep && <FlowProgress currentStep={flowStep} />}
+
       <div className="w-full">
-        {step.id === 'INPUT' && (
-          <QuestionInput onDiagnosed={handleDiagnosed} />
-        )}
-
-        {step.id === 'DIAGNOSIS_RESULT' && (
-          <div className="animate-in fade-in zoom-in-95 duration-500 max-w-xl mx-auto space-y-8 text-center py-10">
-            {step.fallback ? (
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary text-secondary-foreground text-sm font-medium mb-4">
-                <AlertCircle className="w-4 h-4" />
-                Couldn't reach AI — defaulting to standard topic
-              </div>
-            ) : null}
-            
-            <div className="space-y-4">
-              <div className="mx-auto w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-6">
-                <Target className="w-8 h-8" />
-              </div>
-              <h2 className="text-2xl text-muted-foreground font-medium">We think you might need a refresher on:</h2>
-              <div className="text-4xl md:text-5xl font-bold text-foreground py-4 tracking-tight">
-                {step.label}
-              </div>
-            </div>
-
-            <Button 
-              size="lg" 
-              className="mt-8 text-lg px-8 py-6 rounded-full shadow-lg"
-              onClick={() => setStep({ id: 'VALIDATING', nodeId: step.nodeId })}
-            >
-              Check my understanding
-            </Button>
-            
-            <div className="pt-8">
-              <Button variant="ghost" size="sm" onClick={handleRestart} className="text-muted-foreground">
-                Wait, I meant something else
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {step.id === 'VALIDATING' && (
-          <ValidationCheck 
-            nodeId={step.nodeId} 
-            onContinue={() => setStep({ id: 'EXPLANATION', nodeId: step.nodeId })} 
+        {step.id === "INPUT" && (
+          <QuestionInput
+            onDiagnosed={(result) =>
+              setStep({ id: "DIAGNOSIS", diagnosis: result })
+            }
           />
         )}
 
-        {step.id === 'EXPLANATION' && (
-          <Explanation 
-            nodeId={step.nodeId} 
-            onContinue={() => setStep({ id: 'QUIZ', nodeId: step.nodeId })} 
-          />
-        )}
-
-        {step.id === 'QUIZ' && (
-          <QuizPanel 
-            nodeId={step.nodeId} 
+        {step.id === "DIAGNOSIS" && (
+          <DiagnosisScreen
+            askedTopic={step.diagnosis.askedTopic}
+            hypothesisNode={step.diagnosis.hypothesisNode}
+            confusionType={step.diagnosis.confusionType}
+            fallback={step.diagnosis.fallback}
+            onStartLearning={() =>
+              setStep({
+                id: "LEARN",
+                nodeId: step.diagnosis.hypothesisNode,
+                askedNodeId: step.diagnosis.askedNodeId,
+                askedTopic: step.diagnosis.askedTopic,
+              })
+            }
             onRestart={handleRestart}
+          />
+        )}
+
+        {step.id === "LEARN" && (
+          <LearningModule
+            nodeId={step.nodeId}
+            askedNodeId={step.askedNodeId}
+            askedTopic={step.askedTopic}
+            onContinue={() =>
+              setStep({ id: "KNOWLEDGE_CHECK", nodeId: step.nodeId })
+            }
+          />
+        )}
+
+        {step.id === "KNOWLEDGE_CHECK" && (
+          <ValidationCheck
+            nodeId={step.nodeId}
+            onContinue={() =>
+              setStep({ id: "QUIZ", nodeId: step.nodeId })
+            }
+          />
+        )}
+
+        {step.id === "QUIZ" && (
+          <QuizPanel
+            nodeId={step.nodeId}
+            onComplete={(score, total) =>
+              setStep({ id: "SUCCESS", nodeId: step.nodeId, score, total })
+            }
+          />
+        )}
+
+        {step.id === "SUCCESS" && (
+          <SuccessScreen
+            nodeLabel={NODE_LABELS[step.nodeId] ?? step.nodeId}
+            score={step.score}
+            total={step.total}
+            onStudyAnother={handleRestart}
           />
         )}
       </div>

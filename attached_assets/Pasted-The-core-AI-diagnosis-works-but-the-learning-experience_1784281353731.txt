@@ -1,0 +1,205 @@
+The core AI diagnosis works, but the learning experience is incomplete.
+
+Right now the flow is:
+
+Question → Diagnosis → Validation
+
+This feels abrupt because the student is never actually taught the prerequisite before being evaluated.
+
+Redesign the experience into a complete learning journey while preserving the root-cause diagnosis concept.
+
+The new flow should be:
+
+1. Student asks a question.
+2. AI diagnoses the real prerequisite gap.
+3. Show a Diagnosis screen.
+
+Example:
+
+----------------------------------------------------
+🧠 MindBridge Diagnosis Complete
+
+Good news! Binary Search isn't actually the problem.
+
+The concept you're missing is:
+
+📚 Sorted Arrays
+
+Why?
+
+Binary Search depends on sorted data because it eliminates half of the search space after every comparison.
+
+Let's spend two minutes mastering Sorted Arrays first.
+----------------------------------------------------
+
+Include a prominent "Start Learning" button.
+
+----------------------------------------------------
+
+4. Learning Module
+
+Create a dedicated learning page that includes:
+
+• Topic title
+• Short explanation (2-3 paragraphs)
+• Real-world analogy
+• Visual example
+• Code example (where appropriate)
+• Key takeaway box
+
+For example, for Sorted Arrays:
+
+- Explain what a sorted array is.
+- Explain why Binary Search requires sorting.
+- Show an unsorted array and why Binary Search fails.
+- Show a sorted array and how the middle element eliminates half the search space.
+- Use a dictionary/phonebook analogy.
+
+----------------------------------------------------
+
+5. Interactive Example
+
+Instead of only static text, create a simple interactive visualization.
+
+Example:
+
+Unsorted:
+8 2 9 1 5
+
+↓
+
+Binary Search
+
+❌ Doesn't work
+
+Then
+
+Sorted:
+1 2 5 8 9
+
+↓
+
+Middle = 5
+
+Everything left < 5
+Everything right > 5
+
+✅ Works
+
+Animations can be simple CSS transitions.
+
+----------------------------------------------------
+
+6. Knowledge Check
+
+After teaching, ask ONE micro-validation question.
+
+Example:
+
+Can Binary Search work correctly on an unsorted array?
+
+○ Yes
+○ No
+
+Show immediate feedback.
+
+----------------------------------------------------
+
+7. Mini Quiz
+
+Generate 2–3 multiple-choice questions focused ONLY on the diagnosed prerequisite.
+
+Display score.
+
+----------------------------------------------------
+
+8. Success Screen
+
+If the student passes:
+
+🎉 Great job!
+
+You mastered:
+
+Sorted Arrays
+
+Update mastery progress.
+
+----------------------------------------------------
+
+9. Dashboard
+
+Redesign the dashboard to feel like a learning platform.
+
+Include:
+
+• Mastery percentage bars
+• Topics completed
+• Topics in progress
+• Recommended next topic
+• Learning streak (mock data is fine)
+• Overall completion percentage
+
+Example:
+
+Searching      █████████░ 90%
+Sorting        ██████░░░░ 63%
+Recursion      ██░░░░░░░░ 22%
+
+Today's Recommendation
+
+👉 Binary Search
+
+----------------------------------------------------
+
+10. Navigation
+
+Add a progress indicator across the entire learning flow:
+
+Diagnosis
+↓
+
+Learn
+↓
+
+Practice
+↓
+
+Quiz
+↓
+
+Progress
+
+Highlight the current step.
+
+----------------------------------------------------
+
+11. UI
+
+Give the application a polished educational feel similar to Duolingo, Khan Academy, or Brilliant.
+
+Use:
+
+- Smooth transitions
+- Friendly illustrations/icons
+- Cards
+- Progress bars
+- Soft shadows
+- Consistent spacing
+- Responsive layout
+
+----------------------------------------------------
+
+Important:
+
+Keep the original AI diagnosis system.
+
+The unique feature of MindBridge is NOT that it teaches.
+
+It is that it diagnoses WHY the student is confused before teaching.
+
+Everything else should reinforce that idea.
+
+Do not remove any existing functionality.
+
+Extend the current implementation into a complete educational product.
