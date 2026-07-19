@@ -225,6 +225,16 @@ components:
         correct:
           type: string
 
+    Complexity:
+      type: object
+      properties:
+        time:
+          type: string
+          description: Time complexity (e.g. "O(n log n)")
+        space:
+          type: string
+          description: Space complexity (e.g. "O(n)")
+
     TeachingContent:
       type: object
       required: [node_id, label, explanation, analogy]
@@ -238,9 +248,24 @@ components:
         explanation:
           type: string
           description: Explanation of the prerequisite concept
+        why_it_exists:
+          type: string
+          description: The problem this concept solves — why it was invented
         analogy:
           type: string
           description: Real-world analogy for the prerequisite concept
+        common_mistakes:
+          type: array
+          items:
+            type: string
+          description: Common errors students make with this concept
+        applications:
+          type: array
+          items:
+            type: string
+          description: Real-world use cases where this concept appears
+        complexity:
+          $ref: "#/components/schemas/Complexity"
         original_topic_node_id:
           type: string
           description: Node id for the topic the student originally asked about

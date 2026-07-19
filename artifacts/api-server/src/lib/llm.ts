@@ -2,10 +2,15 @@ import { GoogleGenAI } from "@google/genai";
 import { logger } from "./logger";
 
 const VALID_NODE_IDS = [
+  "algorithms_intro",
   "data_structures",
   "variables_and_data_types",
   "arrays",
+  "linked_lists",
   "loops",
+  "stacks",
+  "queues",
+  "hash_tables",
   "linear_search",
   "sorted_arrays",
   "binary_search",
@@ -14,10 +19,10 @@ const VALID_NODE_IDS = [
   "merge_sort",
   "recursion",
   "base_case_and_recursive_case",
-  "stacks",
   "big_o_time_complexity",
   "trees_intro",
   "tree_traversal",
+  "graphs_intro",
 ];
 
 const FALLBACK_NODE = "variables_and_data_types";

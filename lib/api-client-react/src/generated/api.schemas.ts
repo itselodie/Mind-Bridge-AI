@@ -50,6 +50,13 @@ export interface ValidationQuestion {
   correct: string;
 }
 
+export interface Complexity {
+  /** Time complexity (e.g. "O(n log n)") */
+  time?: string;
+  /** Space complexity (e.g. "O(n)") */
+  space?: string;
+}
+
 export interface TeachingContent {
   /** The prerequisite node id */
   node_id: string;
@@ -57,8 +64,15 @@ export interface TeachingContent {
   label: string;
   /** Explanation of the prerequisite concept */
   explanation: string;
+  /** The problem this concept solves — why it was invented */
+  why_it_exists?: string;
   /** Real-world analogy for the prerequisite concept */
   analogy: string;
+  /** Common errors students make with this concept */
+  common_mistakes?: string[];
+  /** Real-world use cases where this concept appears */
+  applications?: string[];
+  complexity?: Complexity;
   /** Node id for the topic the student originally asked about */
   original_topic_node_id?: string;
   /** Label of the topic originally asked about */

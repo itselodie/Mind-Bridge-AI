@@ -7,10 +7,12 @@ import { cn } from "@/lib/utils";
 
 const EXAMPLES = [
   "What is an array?",
+  "Explain linked lists",
+  "What is a hash table?",
   "I don't understand binary search",
   "Explain recursion",
-  "My merge sort is failing",
   "What is Big-O?",
+  "Tell me about graphs",
   "I'm confused about trees",
 ];
 
@@ -75,6 +77,10 @@ function extractTopic(question: string): string {
  * Returns null when the topic is not in the local graph (caller falls back to /diagnose).
  */
 const TOPIC_ALIASES: Record<string, string> = {
+  // algorithms (meta concept)
+  "algorithm": "algorithms_intro",
+  "algorithms": "algorithms_intro",
+  "algo": "algorithms_intro",
   // data structures (broad intro topic)
   "data structure": "data_structures",
   "data structures": "data_structures",
@@ -90,12 +96,38 @@ const TOPIC_ALIASES: Record<string, string> = {
   // arrays
   "array": "arrays",
   "arrays": "arrays",
+  // linked lists
+  "linked list": "linked_lists",
+  "linked lists": "linked_lists",
+  "singly linked list": "linked_lists",
+  "doubly linked list": "linked_lists",
+  "linked node": "linked_lists",
   // loops
   "loop": "loops",
   "loops": "loops",
   "for loop": "loops",
   "while loop": "loops",
   "iteration": "loops",
+  // stacks
+  "stack": "stacks",
+  "stacks": "stacks",
+  "lifo": "stacks",
+  // queues
+  "queue": "queues",
+  "queues": "queues",
+  "fifo": "queues",
+  "deque": "queues",
+  // hash tables
+  "hash table": "hash_tables",
+  "hash tables": "hash_tables",
+  "hash map": "hash_tables",
+  "hashmap": "hash_tables",
+  "hashtable": "hash_tables",
+  "dictionary": "hash_tables",
+  "dict": "hash_tables",
+  "map": "hash_tables",
+  "hash": "hash_tables",
+  "associative array": "hash_tables",
   // linear search
   "linear search": "linear_search",
   "sequential search": "linear_search",
@@ -135,24 +167,33 @@ const TOPIC_ALIASES: Record<string, string> = {
   "base case": "base_case_and_recursive_case",
   "recursive case": "base_case_and_recursive_case",
   "base case and recursive case": "base_case_and_recursive_case",
-  // stacks
-  "stack": "stacks",
-  "stacks": "stacks",
-  "lifo": "stacks",
   // trees
   "tree": "trees_intro",
   "trees": "trees_intro",
   "binary tree": "trees_intro",
   "binary search tree": "trees_intro",
   "bst": "trees_intro",
-  // tree traversal
+  // tree traversal / DFS
   "tree traversal": "tree_traversal",
   "traversal": "tree_traversal",
   "inorder": "tree_traversal",
   "preorder": "tree_traversal",
   "postorder": "tree_traversal",
+  "depth first search": "tree_traversal",
+  "depth-first search": "tree_traversal",
   "dfs": "tree_traversal",
-  "bfs": "tree_traversal",
+  // graphs / BFS
+  "graph": "graphs_intro",
+  "graphs": "graphs_intro",
+  "graph theory": "graphs_intro",
+  "directed graph": "graphs_intro",
+  "undirected graph": "graphs_intro",
+  "weighted graph": "graphs_intro",
+  "breadth first search": "graphs_intro",
+  "breadth-first search": "graphs_intro",
+  "bfs": "graphs_intro",
+  "adjacency list": "graphs_intro",
+  "adjacency matrix": "graphs_intro",
 };
 
 function resolveNodeId(topic: string): string | null {

@@ -14,7 +14,11 @@ interface GraphNode {
   prerequisites: string[];
   teaching: {
     explanation: string;
+    why_it_exists?: string;
     analogy: string;
+    common_mistakes?: string[];
+    applications?: string[];
+    complexity?: { time: string; space: string };
   };
   validation_question: {
     prompt: string;
@@ -246,7 +250,11 @@ router.post("/teach", async (req, res) => {
       node_id: prereqNode.id,
       label: prereqNode.label,
       explanation: prereqNode.teaching.explanation,
+      why_it_exists: prereqNode.teaching.why_it_exists ?? null,
       analogy: prereqNode.teaching.analogy,
+      common_mistakes: prereqNode.teaching.common_mistakes ?? [],
+      applications: prereqNode.teaching.applications ?? [],
+      complexity: prereqNode.teaching.complexity ?? null,
       // Original topic (what the student asked about)
       ...(originalNode && {
         original_topic_node_id: originalNode.id,

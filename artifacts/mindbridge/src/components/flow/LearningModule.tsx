@@ -14,6 +14,9 @@ import {
   Link2,
   AlertTriangle,
   SearchCheck,
+  Zap,
+  Layers,
+  Clock,
 } from "lucide-react";
 import { InteractiveVisual } from "./InteractiveVisual";
 import { NODE_CONTENT } from "@/lib/nodes";
@@ -135,6 +138,8 @@ export function LearningModule({
     );
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data = teachQuery.data as any;
   const {
     label: prereqLabel,
     explanation: prereqExplanation,
@@ -143,7 +148,11 @@ export function LearningModule({
     original_topic_explanation,
     original_topic_analogy,
     connection,
-  } = teachQuery.data;
+    why_it_exists,
+    common_mistakes,
+    applications,
+    complexity,
+  } = data;
 
   const prereqContent = NODE_CONTENT[nodeId];
   const originalContent = askedNodeId ? NODE_CONTENT[askedNodeId] : undefined;
@@ -207,7 +216,7 @@ export function LearningModule({
         </Section>
       )}
 
-      {/* ── Section 3: Learn the prerequisite ────────────────────────── */}
+      {/* ── Section 3: Learn the concept ─────────────────────────────── */}
       <Section
         icon={BookOpen}
         label={isSameNode ? "Let's learn it" : "Let's learn the missing concept"}
@@ -233,6 +242,92 @@ export function LearningModule({
           <CodeBlock code={prereqContent.codeExample} language={prereqContent.codeLanguage} />
         )}
       </Section>
+
+      {/* ── Why it exists ─────────────────────────────────────────────── */}
+      {why_it_exists && (
+        <Section
+          icon={Zap}
+          label="Why it exists"
+          title="The problem it solves"
+          accentClass="text-violet-600 dark:text-violet-400"
+          bgClass="bg-violet-500/10"
+          borderClass="border-violet-500/20"
+        >
+          <p className="text-base leading-loose text-foreground/85">
+            {why_it_exists}
+          </p>
+        </Section>
+      )}
+
+      {/* ── Common mistakes ───────────────────────────────────────────── */}
+      {Array.isArray(common_mistakes) && common_mistakes.length > 0 && (
+        <Section
+          icon={AlertTriangle}
+          label="Common mistakes"
+          title="What trips people up"
+          accentClass="text-amber-600 dark:text-amber-400"
+          bgClass="bg-amber-500/10"
+          borderClass="border-amber-500/20"
+        >
+          <ul className="space-y-4">
+            {common_mistakes.map((mistake: string, i: number) => (
+              <li key={i} className="flex gap-4 items-start">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xs font-bold mt-0.5">
+                  {i + 1}
+                </span>
+                <p className="text-base leading-relaxed text-foreground/85">{mistake}</p>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
+
+      {/* ── Practical applications ─────────────────────────────────────── */}
+      {Array.isArray(applications) && applications.length > 0 && (
+        <Section
+          icon={Layers}
+          label="Practical applications"
+          title="Where you'll see this in the real world"
+          accentClass="text-chart-1"
+          bgClass="bg-chart-1/10"
+          borderClass="border-chart-1/20"
+        >
+          <ul className="space-y-3">
+            {applications.map((app: string, i: number) => (
+              <li key={i} className="flex gap-3 items-start">
+                <span className="flex-shrink-0 w-2 h-2 rounded-full bg-chart-1 mt-2.5" />
+                <p className="text-base leading-relaxed text-foreground/85">{app}</p>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
+
+      {/* ── Time & Space Complexity ───────────────────────────────────── */}
+      {complexity && (complexity.time || complexity.space) && (
+        <div className="rounded-2xl border-2 border-sky-500/30 bg-sky-500/5 p-6 space-y-4">
+          <div className="flex items-center gap-2">
+            <Clock className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+            <p className="font-bold text-sm text-sky-600 dark:text-sky-400 uppercase tracking-wider">
+              Time & Space Complexity
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {complexity.time && (
+              <div className="p-4 rounded-xl bg-background border border-sky-500/20">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Time</p>
+                <p className="font-mono font-bold text-sky-700 dark:text-sky-300 text-base leading-relaxed">{complexity.time}</p>
+              </div>
+            )}
+            {complexity.space && (
+              <div className="p-4 rounded-xl bg-background border border-sky-500/20">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Space</p>
+                <p className="font-mono font-bold text-sky-700 dark:text-sky-300 text-base leading-relaxed">{complexity.space}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Interactive visual */}
       <InteractiveVisual nodeId={nodeId} />
@@ -267,14 +362,18 @@ export function LearningModule({
       )}
 
       {/* ── Optional prereq hint (direct-learn mode only) ─────────────── */}
-      {isDirectLearn && prereqHintLabel && onCheckPrerequisites && (
+      {isDirectLearn && onCheckPrerequisites && (
         <div className="rounded-2xl border-2 border-muted bg-muted/40 p-6 space-y-4">
           <div className="flex items-start gap-3">
             <SearchCheck className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
             <p className="text-foreground/80 leading-relaxed">
-              <span className="font-semibold text-foreground">{prereqLabel}</span> relies on{" "}
-              <span className="font-semibold text-foreground">{prereqHintLabel}</span>. If
-              you&apos;re not confident with that concept yet, you can quickly review it now.
+              {prereqHintLabel
+                ? <>
+                    <span className="font-semibold text-foreground">{prereqLabel}</span> relies on{" "}
+                    <span className="font-semibold text-foreground">{prereqHintLabel}</span>.{" "}
+                  </>
+                : null}
+              Would you like MindBridge to check whether you&apos;re missing any prerequisite concepts?
             </p>
           </div>
           <Button
@@ -283,7 +382,7 @@ export function LearningModule({
             className="gap-2 w-full sm:w-auto"
           >
             <SearchCheck className="w-4 h-4" />
-            Check if I&apos;m missing prerequisite knowledge
+            Check prerequisite concepts
           </Button>
         </div>
       )}

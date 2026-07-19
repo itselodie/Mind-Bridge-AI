@@ -6,10 +6,15 @@
  * without calling the API.
  */
 export const NODE_PREREQUISITES: Record<string, string[]> = {
+  algorithms_intro:            [],
   data_structures:             ["variables_and_data_types"],
   variables_and_data_types:    [],
   arrays:                      ["variables_and_data_types"],
+  linked_lists:                ["arrays"],
   loops:                       ["variables_and_data_types"],
+  stacks:                      ["arrays"],
+  queues:                      ["arrays"],
+  hash_tables:                 ["arrays", "loops"],
   linear_search:               ["arrays", "loops"],
   sorted_arrays:               ["arrays", "loops"],
   binary_search:               ["sorted_arrays", "divide_and_conquer"],
@@ -18,17 +23,22 @@ export const NODE_PREREQUISITES: Record<string, string[]> = {
   recursion:                   ["loops"],
   base_case_and_recursive_case: ["recursion"],
   merge_sort:                  ["recursion", "basic_sorting", "divide_and_conquer"],
-  stacks:                      ["arrays"],
   big_o_time_complexity:       ["loops"],
   trees_intro:                 ["recursion", "stacks"],
   tree_traversal:              ["trees_intro", "recursion"],
+  graphs_intro:                ["trees_intro", "recursion"],
 };
 
 export const NODE_LABELS: Record<string, string> = {
+  algorithms_intro: "Algorithms",
   data_structures: "Data Structures",
   variables_and_data_types: "Variables & Data Types",
   arrays: "Arrays",
+  linked_lists: "Linked Lists",
   loops: "Loops",
+  stacks: "Stacks",
+  queues: "Queues",
+  hash_tables: "Hash Tables",
   linear_search: "Linear Search",
   sorted_arrays: "Sorted Arrays",
   binary_search: "Binary Search",
@@ -37,10 +47,10 @@ export const NODE_LABELS: Record<string, string> = {
   merge_sort: "Merge Sort",
   recursion: "Recursion",
   base_case_and_recursive_case: "Base Case & Recursive Case",
-  stacks: "Stacks",
   big_o_time_complexity: "Big-O / Time Complexity",
   trees_intro: "Trees (Intro)",
   tree_traversal: "Tree Traversal",
+  graphs_intro: "Graphs",
 };
 
 export interface NodeCategory {
@@ -50,12 +60,13 @@ export interface NodeCategory {
 }
 
 export const NODE_CATEGORIES: NodeCategory[] = [
-  { label: "Fundamentals", emoji: "⚙️", nodeIds: ["variables_and_data_types", "arrays", "loops", "stacks"] },
+  { label: "Foundations", emoji: "⚙️", nodeIds: ["algorithms_intro", "variables_and_data_types", "arrays", "loops"] },
+  { label: "Data Structures", emoji: "🗄️", nodeIds: ["data_structures", "linked_lists", "stacks", "queues", "hash_tables"] },
   { label: "Searching", emoji: "🔍", nodeIds: ["linear_search", "sorted_arrays", "binary_search"] },
   { label: "Complexity", emoji: "📈", nodeIds: ["big_o_time_complexity", "divide_and_conquer"] },
   { label: "Recursion", emoji: "🔁", nodeIds: ["recursion", "base_case_and_recursive_case"] },
   { label: "Sorting", emoji: "🗂️", nodeIds: ["basic_sorting", "merge_sort"] },
-  { label: "Trees", emoji: "🌲", nodeIds: ["trees_intro", "tree_traversal"] },
+  { label: "Trees & Graphs", emoji: "🌲", nodeIds: ["trees_intro", "tree_traversal", "graphs_intro"] },
 ];
 
 export interface NodeContent {
@@ -65,6 +76,25 @@ export interface NodeContent {
 }
 
 export const NODE_CONTENT: Record<string, NodeContent> = {
+  algorithms_intro: {
+    codeExample: `// An algorithm is a precise, repeatable procedure
+// Example: find the maximum value in an array
+
+function findMax(arr) {
+  let max = arr[0];             // assume first is largest
+  for (let i = 1; i < arr.length; i++) {
+    if (arr[i] > max) {
+      max = arr[i];             // update when we find bigger
+    }
+  }
+  return max;
+}
+
+findMax([3, 7, 1, 9, 4]); // → 9
+// 4 comparisons for 5 elements → O(n) time, O(1) space`,
+    codeLanguage: "JavaScript",
+    keyTakeaway: "An algorithm is not code — it is a precise procedure that can be implemented in any language. A correct algorithm gives the right answer for all valid inputs. Big-O efficiency determines whether it scales to real-world data.",
+  },
   data_structures: {
     codeExample: `// Arrays — O(1) access by index
 const scores = [95, 87, 92];
@@ -110,6 +140,30 @@ console.log(fruits.length); // 3`,
     codeLanguage: "JavaScript",
     keyTakeaway: "Arrays give you O(1) access by index — [5] is just as fast as [5,000,000]. The trade-off: inserting or deleting in the middle requires shifting elements, which is O(n).",
   },
+  linked_lists: {
+    codeExample: `// Each node contains a value and a pointer to the next
+class Node {
+  constructor(value) {
+    this.value = value;
+    this.next  = null;   // pointer to next node
+  }
+}
+
+const a = new Node("A");
+const b = new Node("B");
+const c = new Node("C");
+a.next = b;  // A → B
+b.next = c;  // B → C → null
+
+// Traverse: follow the chain
+let current = a;
+while (current !== null) {
+  console.log(current.value); // A, B, C
+  current = current.next;
+}`,
+    codeLanguage: "JavaScript",
+    keyTakeaway: "Linked lists trade O(1) random index access (arrays) for O(1) insertion/deletion at any known position. Use arrays for index-heavy workloads; use linked lists when insertion/deletion patterns dominate.",
+  },
   loops: {
     codeExample: `// Loops repeat code for each element
 const nums = [10, 20, 30, 40, 50];
@@ -125,6 +179,68 @@ for (let i = 0; i < nums.length; i++) {
 for (const n of nums) console.log(n);`,
     codeLanguage: "JavaScript",
     keyTakeaway: "Loops are the engine behind O(n) algorithms. Nested loops multiply complexity: two nested loops over n items = O(n²) — which gets slow fast.",
+  },
+  stacks: {
+    codeExample: `// Stack: Last In, First Out (LIFO)
+const stack = [];
+
+stack.push("A"); // [A]
+stack.push("B"); // [A, B]
+stack.push("C"); // [A, B, C]
+
+// Peek at top
+stack[stack.length - 1]; // "C"
+
+// Pop removes from the TOP
+stack.pop(); // "C" removed → [A, B]
+stack.pop(); // "B" removed → [A]
+
+// Real use: browser back button, undo, call stack`,
+    codeLanguage: "JavaScript",
+    keyTakeaway: "Stacks enforce Last-In-First-Out order. Your browser's back button, undo history, function call tracking, and expression parsing all rely on this LIFO property.",
+  },
+  queues: {
+    codeExample: `// Queue: First-In First-Out (FIFO)
+class Queue {
+  #items = [];
+  enqueue(x) { this.#items.push(x); }      // add to back  O(1)
+  dequeue()  { return this.#items.shift(); } // remove front O(n) — use linked list for O(1)
+  peek()     { return this.#items[0]; }
+  isEmpty()  { return this.#items.length === 0; }
+}
+
+const q = new Queue();
+q.enqueue("Task A");
+q.enqueue("Task B");
+q.enqueue("Task C");
+
+q.dequeue(); // "Task A" — first in, first out
+q.peek();    // "Task B"
+
+// Real use: print jobs, BFS traversal, server request handling`,
+    codeLanguage: "JavaScript",
+    keyTakeaway: "Queues enforce First-In-First-Out order — the first item added is the first processed. Fundamental to BFS, task scheduling, print spoolers, and any system where arrival order must be respected.",
+  },
+  hash_tables: {
+    codeExample: `// Hash table: O(1) average lookup by key
+const table = new Map();
+
+table.set("alice", 95);
+table.set("bob",   87);
+table.set("carol", 92);
+
+console.log(table.get("alice")); // 95 — O(1)
+console.log(table.has("dave"));  // false
+
+// Classic use: count element frequencies
+const words = ["apple", "banana", "apple", "cherry", "apple"];
+const freq = {};
+for (const w of words) {
+  freq[w] = (freq[w] ?? 0) + 1;
+}
+// { apple: 3, banana: 1, cherry: 1 }`,
+    codeLanguage: "JavaScript",
+    keyTakeaway: "Hash tables deliver O(1) average lookup, insert, and delete for arbitrary keys — the most practically useful asymptotic guarantee in computer science. Every language ships one: dict, Map, HashMap.",
   },
   linear_search: {
     codeExample: `// Check every element one by one until found
@@ -208,24 +324,10 @@ function broken(n) {
     codeLanguage: "JavaScript",
     keyTakeaway: "The base case is not optional — it prevents infinite recursion. Every recursive call must move the problem closer to the base case, or you will get a stack overflow error.",
   },
-  stacks: {
-    codeExample: `// Stack: Last In, First Out (LIFO)
-const stack = [];
-
-stack.push("A"); // [A]
-stack.push("B"); // [A, B]
-stack.push("C"); // [A, B, C]
-
-// Peek at top
-stack[stack.length - 1]; // "C"
-
-// Pop removes from the TOP
-stack.pop(); // "C" removed → [A, B]
-stack.pop(); // "B" removed → [A]
-
-// Real use: browser back button, undo, call stack`,
+  stacks_duplicate: {
+    codeExample: "",
     codeLanguage: "JavaScript",
-    keyTakeaway: "Stacks enforce Last-In-First-Out order. Your browser's back button, undo history, function call tracking, and expression parsing all rely on this LIFO property.",
+    keyTakeaway: "",
   },
   big_o_time_complexity: {
     codeExample: `// O(1) — constant time, always 1 step
@@ -354,5 +456,33 @@ function preorder(node) {   // Root → Left → Right
 // Inorder on a BST prints values in sorted order!`,
     codeLanguage: "JavaScript",
     keyTakeaway: "Inorder traversal of a Binary Search Tree always produces elements in sorted order. All traversals are O(n) — every node must be visited exactly once.",
+  },
+  graphs_intro: {
+    codeExample: `// Adjacency list: each node maps to its neighbours
+const graph = {
+  A: ["B", "C"],   // A connects to B and C
+  B: ["A", "D"],
+  C: ["A"],
+  D: ["B"],
+};
+
+// BFS — explore level by level using a queue
+function bfs(graph, start) {
+  const visited = new Set([start]);
+  const queue   = [start];
+  while (queue.length > 0) {
+    const node = queue.shift();
+    console.log(node);
+    for (const neighbour of graph[node]) {
+      if (!visited.has(neighbour)) {
+        visited.add(neighbour);
+        queue.push(neighbour);
+      }
+    }
+  }
+}
+bfs(graph, "A"); // A B C D`,
+    codeLanguage: "JavaScript",
+    keyTakeaway: "Graphs model any many-to-many relationship. Always track visited nodes to avoid infinite loops in cyclic graphs. BFS (queue) finds shortest unweighted paths; DFS (stack/recursion) explores depth first.",
   },
 };

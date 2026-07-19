@@ -1,11 +1,88 @@
 [
   {
+    "id": "algorithms_intro",
+    "label": "Algorithms",
+    "prerequisites": [],
+    "teaching": {
+      "explanation": "An algorithm is a precise, step-by-step procedure for solving a problem that is guaranteed to terminate and produce a correct result. An algorithm takes input, performs a defined sequence of operations, and produces output. The key properties: correctness (always gives the right answer), efficiency (uses minimum time and memory), and generality (works for all valid inputs, not just the examples you tested). Algorithms are independent of any programming language — a sorting algorithm is the same idea whether written in Python, Java, or C.",
+      "why_it_exists": "Computers execute instructions, not intentions. 'Find the shortest route' is an intention. Dijkstra's algorithm is the precise procedure that actually computes it. Without algorithms, there is no systematic way to guarantee correctness or predict how the solution will perform on large inputs.",
+      "analogy": "An algorithm is a cooking recipe: a precise, ordered list of steps that — when followed correctly — always produces the same dish. The recipe doesn't depend on which kitchen you use or which chef follows it. If the recipe is correct, the dish is correct every time.",
+      "common_mistakes": [
+        "Writing code that works on hand-picked examples but fails on edge cases — always test empty input, size 1, duplicates, and already-sorted data",
+        "Optimising before achieving correctness — get it right first, then make it fast",
+        "Ignoring problem constraints — an O(n²) solution is fine for n=100 but catastrophic for n=1,000,000"
+      ],
+      "applications": [
+        "Sorting: every database ORDER BY clause runs a sort algorithm",
+        "Searching: every search engine and file system uses search algorithms",
+        "Compression: ZIP, JPEG, and MP3 are compression algorithms",
+        "Cryptography: TLS/HTTPS security depends on number-theory algorithms",
+        "Machine learning: gradient descent and backpropagation are algorithms"
+      ]
+    },
+    "validation_question": {
+      "prompt": "Which property is NOT required for a correct algorithm?",
+      "options": [
+        "It must terminate (not run forever)",
+        "It must produce correct output for all valid inputs",
+        "It must be written in Python",
+        "It must have clearly defined steps"
+      ],
+      "correct": "It must be written in Python"
+    },
+    "quiz": [
+      {
+        "q": "What does it mean for an algorithm to be 'correct'?",
+        "options": [
+          "It runs in under one second",
+          "It produces the right answer for all valid inputs, not just the examples tested",
+          "It uses less than 100 lines of code",
+          "It is written without any loops"
+        ],
+        "correct": 1
+      },
+      {
+        "q": "Why is an O(n²) algorithm a problem for n = 1,000,000?",
+        "options": [
+          "Because n² is an illegal exponent in most languages",
+          "Because it would require a trillion operations — far too slow",
+          "Because O(n²) algorithms cannot sort",
+          "Because they require extra memory proportional to n²"
+        ],
+        "correct": 1
+      },
+      {
+        "q": "What is the first thing you should ensure when writing an algorithm?",
+        "options": [
+          "It runs in O(1) time",
+          "It uses the minimum possible memory",
+          "It is correct before optimising for speed",
+          "It avoids all loops"
+        ],
+        "correct": 2
+      }
+    ]
+  },
+  {
     "id": "data_structures",
     "label": "Data Structures",
     "prerequisites": ["variables_and_data_types"],
     "teaching": {
-      "explanation": "A data structure is a way of organising values in memory so they can be stored, retrieved, and modified efficiently. Different problems need different structures: if you need instant access by position, use an array; if you need fast insertion at both ends, use a deque; if you need to undo operations, use a stack; if you need hierarchical relationships, use a tree. Every data structure makes a trade-off — arrays give O(1) access but O(n) insertion; linked lists give O(1) insertion at the head but O(n) access by index. Choosing the right structure for the problem is one of the most important skills in programming.",
-      "analogy": "Think of data structures as different types of containers in a kitchen. A shelf (array) lets you grab any item instantly if you know its position, but adding something in the middle means shifting everything along. A stack of plates (stack) only lets you take from the top. A filing cabinet (hash map) lets you find any folder immediately by its label. Each container is perfect for certain jobs and terrible for others — the skill is matching the container to the task."
+      "explanation": "A data structure is a way of organising values in memory so they can be stored, retrieved, and modified efficiently. Different problems need different structures: if you need instant access by position, use an array; if you need fast insertion at both ends, use a deque; if you need to undo operations, use a stack; if you need key-value lookup, use a hash map; if you need hierarchical relationships, use a tree. Every data structure makes explicit trade-offs — arrays give O(1) access but O(n) middle insertion; linked lists give O(1) insertion at a known position but O(n) access by index. Choosing the right structure for the problem is one of the most important skills in programming.",
+      "why_it_exists": "Raw data — a single number or string — cannot express relationships between things. You need a container that organises multiple values and defines which operations are efficient. Data structures are those containers; they exist because different patterns of access (random lookup vs ordered insertion vs hierarchy) require fundamentally different memory layouts.",
+      "analogy": "Data structures are like different types of containers in a kitchen. A shelf (array) lets you grab any item instantly if you know its position, but adding something in the middle means shifting everything along. A stack of plates (stack) only lets you take from the top. A filing cabinet with labelled folders (hash map) lets you find any folder immediately by name. Each container is perfect for certain tasks and terrible for others.",
+      "common_mistakes": [
+        "Treating all data structures as interchangeable — using an array when a hash map or queue would be far more efficient",
+        "Not identifying which operations matter most before choosing a structure",
+        "Assuming the simplest structure (array) is always fine and not revisiting the choice when the problem scales"
+      ],
+      "applications": [
+        "Arrays power lookup tables, image pixel buffers, and mathematical matrices",
+        "Stacks handle undo/redo, the function call stack, and expression parsing",
+        "Hash maps enable O(1) lookups in caches, routing tables, and database indexes",
+        "Trees structure file systems, HTML documents, and binary search indexes",
+        "Queues manage print jobs, server request handling, and BFS traversal"
+      ]
     },
     "validation_question": {
       "prompt": "Why do different problems require different data structures?",
@@ -51,7 +128,19 @@
     "prerequisites": [],
     "teaching": {
       "explanation": "A variable is a named storage location that holds a value. Every value has a type — int, float, string, boolean — which tells the computer how much memory to allocate and what operations are legal. For example, you can add two ints (5 + 3 = 8) but you cannot meaningfully add a string and an int without converting first. Declaring a variable like `int age = 25` tells the computer: reserve 4 bytes of memory, call it 'age', and put the number 25 there.",
-      "analogy": "Think of a variable as a labeled box. The label is the variable name, the size of the box is the data type, and the contents are the value. A box labeled 'age' that fits only whole numbers (integers) cannot hold a decimal like 25.7 — you'd need a bigger box labeled 'float'."
+      "why_it_exists": "Computers need to know how much memory to allocate and which operations are legal for a value. A 'data type' provides both — it is the contract between programmer and machine about what a variable can hold and how it behaves.",
+      "analogy": "Think of a variable as a labeled box. The label is the variable name, the size of the box is the data type, and the contents are the value. A box labeled 'age' that fits only whole numbers (integers) cannot hold a decimal like 25.7 — you would need a bigger box labeled 'float'.",
+      "common_mistakes": [
+        "Assuming int and float are interchangeable — integer division truncates silently (7/2 = 3, not 3.5)",
+        "Mutating a string expecting the original to change when the language treats strings as immutable",
+        "Using loosely typed variables for data that should be strictly typed, allowing silent type-coercion bugs"
+      ],
+      "applications": [
+        "Type annotations improve code reliability and catch bugs at compile time in large codebases",
+        "Choosing the correct numeric type prevents overflow in financial and scientific calculations",
+        "Booleans drive all conditional logic, loops, and control flow in every program",
+        "String types underlie all user input handling, file parsing, and network communication"
+      ]
     },
     "validation_question": {
       "prompt": "What does a variable's data type determine?",
@@ -92,7 +181,23 @@
     "prerequisites": ["variables_and_data_types"],
     "teaching": {
       "explanation": "An array is a contiguous block of memory that stores multiple values of the same type, accessed by index. If you have 10 student scores, instead of 10 separate variables you use one array: `int scores[10]`. Indexes start at 0, so `scores[0]` is the first element and `scores[9]` is the last. Because each element is the same size and they sit side by side in memory, the computer can jump to any element in constant time — just calculate: start address + (index × element size).",
-      "analogy": "An array is like a row of numbered mailboxes in an apartment building. Box 0, Box 1, Box 2 … all the same size, all in a line. You can instantly go to mailbox 7 without checking 0 through 6 first, because you know exactly where it is."
+      "why_it_exists": "Without arrays, storing multiple related values requires a separate variable for each one (score1, score2, … score100). Arrays let you work with sequences of data using a single name and a loop, making it possible to process any amount of data with the same code.",
+      "analogy": "An array is like a row of numbered mailboxes in an apartment building. Box 0, Box 1, Box 2 — all the same size, all in a line. You can instantly go to mailbox 7 without checking 0 through 6 first, because you know exactly where it is.",
+      "common_mistakes": [
+        "Off-by-one errors: accessing index arr.length instead of arr.length - 1 causes an out-of-bounds error",
+        "Confusing the index with the value — arr[3] is the 4th element, not the element whose value equals 3",
+        "Mutating an array while iterating over it, which skips or duplicates elements unpredictably"
+      ],
+      "applications": [
+        "Storing ordered sequences: student grades, pixel colours in an image, daily temperatures",
+        "Implementing stacks and queues using push/pop operations on one end",
+        "Lookup tables and matrices for numerical computation and graphics",
+        "Backing storage for most other data structures: heaps, hash table buckets, and circular buffers"
+      ],
+      "complexity": {
+        "time": "O(1) index access; O(n) search, insert in middle, delete in middle",
+        "space": "O(n)"
+      }
     },
     "validation_question": {
       "prompt": "If an array has 5 elements, what is the index of the last element?",
@@ -133,12 +238,95 @@
     ]
   },
   {
+    "id": "linked_lists",
+    "label": "Linked Lists",
+    "prerequisites": ["arrays"],
+    "teaching": {
+      "explanation": "A linked list is a sequence of nodes where each node contains a value and a pointer (reference) to the next node. Unlike an array, nodes are not stored in contiguous memory — each node can sit anywhere in memory, connected by these pointers. This gives linked lists O(1) insertion and deletion at any known position (just redirect pointers), but O(n) access by index because you must start at the head and follow pointers one by one. A singly linked list has one pointer per node (next); a doubly linked list has two (next and prev).",
+      "why_it_exists": "Arrays have one painful limitation: inserting or deleting in the middle requires shifting all subsequent elements — O(n) work. Linked lists fix this. Inserting between two nodes only requires updating two pointers, regardless of list size. They also grow and shrink dynamically without pre-allocating a fixed block.",
+      "analogy": "A linked list is like a scavenger hunt where each clue tells you where to find the next clue. To reach clue #5, you must follow clues 1 → 2 → 3 → 4 → 5 in order. You cannot jump directly to clue #5 because only clue #4 knows where it is.",
+      "common_mistakes": [
+        "Losing the head pointer — if you reassign head without saving it, you have lost access to the entire list",
+        "Forgetting to check for null at the end of the list, causing a NullPointerException when traversing",
+        "In a doubly linked list, forgetting to update both the next and prev pointers breaks traversal in one direction"
+      ],
+      "applications": [
+        "Implementing stacks and queues that grow dynamically without a fixed capacity",
+        "Browser history navigation (doubly linked: forward and back buttons)",
+        "Music playlists where next/previous song navigation is needed",
+        "Memory allocators use free-list linked lists to track available memory blocks"
+      ],
+      "complexity": {
+        "time": "O(n) access by index; O(1) insert/delete at known position (given a pointer to that node)",
+        "space": "O(n) — extra pointer per node vs array"
+      }
+    },
+    "validation_question": {
+      "prompt": "What is the main advantage of a linked list over an array for insertions?",
+      "options": [
+        "Faster O(1) random access by index",
+        "Less total memory usage",
+        "O(1) insertion at a known position — no shifting required",
+        "Automatic sorting on insertion"
+      ],
+      "correct": "O(1) insertion at a known position — no shifting required"
+    },
+    "quiz": [
+      {
+        "q": "To access the 5th element of a linked list, you must:",
+        "options": [
+          "Use index [4] directly",
+          "Start at the head and follow 4 next pointers",
+          "Use a hash function on the index",
+          "Sort the list first"
+        ],
+        "correct": 1
+      },
+      {
+        "q": "What does losing the head pointer of a linked list cause?",
+        "options": [
+          "The list sorts itself automatically",
+          "Only the first element is lost",
+          "The entire list becomes inaccessible — you have no way to reach any node",
+          "The list converts to an array automatically"
+        ],
+        "correct": 2
+      },
+      {
+        "q": "Compared to arrays, linked lists use more memory because:",
+        "options": [
+          "Each node stores its index as well as its value",
+          "Each node stores a pointer to the next node in addition to its value",
+          "Linked lists duplicate every value for safety",
+          "Linked lists require a separate size counter"
+        ],
+        "correct": 1
+      }
+    ]
+  },
+  {
     "id": "loops",
     "label": "Loops",
     "prerequisites": ["variables_and_data_types"],
     "teaching": {
       "explanation": "A loop repeats a block of code while a condition is true. The two most common are `for` (when you know exactly how many iterations) and `while` (when you repeat until something changes). A for loop over an array — `for (int i = 0; i < n; i++)` — is extremely common: i starts at 0, runs while i is less than the array length, and increases by 1 each time. The loop body executes n times total. Loops are what make algorithms work on inputs of any size.",
-      "analogy": "A loop is like a factory assembly line. The conveyor belt keeps moving items forward and performing the same action on each one until there are no more items. The 'while condition is true' part is the sensor that stops the belt when the bin is empty."
+      "why_it_exists": "Without loops, you would need to copy-paste the same code for every element — and you would need to know the size of the data in advance. Loops let algorithms scale to any input size with the same code.",
+      "analogy": "A loop is like a factory assembly line. The conveyor belt keeps moving items forward and performing the same action on each one until there are no more items. The 'while condition is true' part is the sensor that stops the belt when the bin is empty.",
+      "common_mistakes": [
+        "Off-by-one: using < vs <=, causing the last element to be skipped or an extra iteration to run",
+        "Infinite loops from forgetting to update the loop variable (i never increments, condition never becomes false)",
+        "Modifying the collection you are iterating over inside the loop body, causing elements to be skipped"
+      ],
+      "applications": [
+        "Iterating over arrays to compute sums, maximums, averages, or filtered results",
+        "Driving all O(n) and O(n²) algorithms — searching, sorting, comparing element pairs",
+        "Reading lines from a file or messages from a queue until the source is exhausted",
+        "Game loops and animation: redraw every frame until the program exits"
+      ],
+      "complexity": {
+        "time": "O(n) per single loop; O(n²) for two nested loops over the same n elements",
+        "space": "O(1) — only the loop counter variable"
+      }
     },
     "validation_question": {
       "prompt": "How many times does this loop run? `for (int i = 0; i < 5; i++)`",
@@ -174,12 +362,217 @@
     ]
   },
   {
+    "id": "stacks",
+    "label": "Stacks",
+    "prerequisites": ["arrays"],
+    "teaching": {
+      "explanation": "A stack is a data structure that follows Last-In, First-Out (LIFO) order. You can only add (push) or remove (pop) elements from the top. The most recently pushed item is the first to be popped. Common operations: push(x) — add to top O(1), pop() — remove from top O(1), peek() — see top without removing O(1). Stacks appear everywhere in computing: the function call stack, undo history in text editors, the browser back button, and expression evaluation in calculators.",
+      "why_it_exists": "Some problems require strictly reversed access — the last thing you did should be the first thing undone, and the most recent function call must return before the one that called it. LIFO order enforces this naturally, making stacks the right abstraction for these patterns.",
+      "analogy": "A stack is exactly like a stack of plates. You add plates to the top and take them from the top. You cannot remove the plate at the bottom without first removing all the plates above it. The last plate you added is the first one you will use.",
+      "common_mistakes": [
+        "Calling pop() on an empty stack without checking first, causing a stack underflow error",
+        "Using a stack when FIFO (queue) order is actually needed for the problem",
+        "Forgetting that stack operations only touch the top — you cannot access a middle element without popping everything above it"
+      ],
+      "applications": [
+        "Undo/redo in text editors and design tools",
+        "Browser back button — visited pages form a stack",
+        "Function call stack in every programming language runtime",
+        "Matching parentheses and brackets in syntax checking",
+        "Depth-first search (DFS) using an explicit stack"
+      ],
+      "complexity": {
+        "time": "O(1) push, pop, peek",
+        "space": "O(n)"
+      }
+    },
+    "validation_question": {
+      "prompt": "If you push 1, 2, 3 onto a stack in that order and then pop once, what is returned?",
+      "options": ["1", "2", "3", "The stack is unchanged"],
+      "correct": "3"
+    },
+    "quiz": [
+      {
+        "q": "What does LIFO stand for?",
+        "options": [
+          "Linear Input, First Output",
+          "Last In, First Out",
+          "List Insert, Find Object",
+          "Lowest Index, First Operation"
+        ],
+        "correct": 1
+      },
+      {
+        "q": "Which real-world feature is implemented using a stack?",
+        "options": [
+          "A print queue (jobs print in order submitted)",
+          "A browser's back button (last visited page first)",
+          "A to-do list (tasks completed in any order)",
+          "A search result list (sorted by relevance)"
+        ],
+        "correct": 1
+      },
+      {
+        "q": "What does the 'peek' operation do on a stack?",
+        "options": [
+          "Removes the top element",
+          "Adds a new element on top",
+          "Returns the top element without removing it",
+          "Searches the stack for a value"
+        ],
+        "correct": 2
+      }
+    ]
+  },
+  {
+    "id": "queues",
+    "label": "Queues",
+    "prerequisites": ["arrays"],
+    "teaching": {
+      "explanation": "A queue is a data structure that follows First-In, First-Out (FIFO) order. Elements are added to the back (enqueue) and removed from the front (dequeue). The element that has waited longest is always processed next — exactly like a real-world queue. Common operations: enqueue(x) O(1), dequeue() O(1), peek() O(1). Queues are typically implemented with a circular buffer (array) or a linked list to avoid the O(n) cost of shifting that a plain array front-removal would cause.",
+      "why_it_exists": "Many real-world processes must be handled in arrival order — print jobs, server requests, messages in a chat app. A queue enforces this ordering automatically and efficiently without manual tracking or reordering.",
+      "analogy": "A queue is exactly like a line at a coffee shop. The first person to arrive is served first. New customers join at the back. There is no cutting in line — FIFO is non-negotiable.",
+      "common_mistakes": [
+        "Confusing FIFO (queue) with LIFO (stack) — choosing the wrong one leads to incorrect ordering of processed items",
+        "Calling dequeue() on an empty queue without checking first, causing a queue underflow error",
+        "Using a regular array and removing from the front with shift() — this is O(n) because every element must move; use a circular buffer or linked list instead"
+      ],
+      "applications": [
+        "CPU task scheduling: processes are run in arrival order",
+        "Print spooler: jobs print in the order they were submitted",
+        "Breadth-first search (BFS) on graphs and trees",
+        "Network packet buffering and keyboard input buffering",
+        "Message queues in distributed systems (Kafka, RabbitMQ, SQS)"
+      ],
+      "complexity": {
+        "time": "O(1) enqueue and dequeue with proper implementation (circular buffer or linked list)",
+        "space": "O(n)"
+      }
+    },
+    "validation_question": {
+      "prompt": "If you enqueue A, B, C in that order and then dequeue once, what is returned?",
+      "options": ["C", "B", "A", "The queue is unchanged"],
+      "correct": "A"
+    },
+    "quiz": [
+      {
+        "q": "What does FIFO stand for?",
+        "options": [
+          "First Index, Final Output",
+          "Fast Insert, Fast Output",
+          "First In, First Out",
+          "Fixed Index, Floating Object"
+        ],
+        "correct": 2
+      },
+      {
+        "q": "Why is removing from the front of a plain array a bad implementation for a queue?",
+        "options": [
+          "Arrays cannot hold more than one element",
+          "Every remaining element must shift left, making it O(n)",
+          "Arrays do not support the remove operation",
+          "The front element is always null in an array"
+        ],
+        "correct": 1
+      },
+      {
+        "q": "Breadth-first search (BFS) uses a queue because:",
+        "options": [
+          "BFS must process nodes in reverse order of discovery",
+          "BFS must process nodes in the order they are discovered — FIFO",
+          "Queues are faster than stacks for graph traversal",
+          "BFS only works on trees, not graphs"
+        ],
+        "correct": 1
+      }
+    ]
+  },
+  {
+    "id": "hash_tables",
+    "label": "Hash Tables",
+    "prerequisites": ["arrays", "loops"],
+    "teaching": {
+      "explanation": "A hash table (or hash map) stores key-value pairs with O(1) average-case lookup, insert, and delete. It works by running the key through a hash function that computes an array index (a 'bucket'). To look up a value, hash the key again and go directly to that bucket. Collisions (two keys mapping to the same index) are handled with chaining (a linked list at each bucket) or open addressing (probing nearby slots). Hash tables are one of the most practically useful data structures — almost every language ships one as a first-class citizen (dict, HashMap, object literal).",
+      "why_it_exists": "Arrays give O(1) access by numeric index, but real data has string or compound keys. Hash tables extend O(1) access to arbitrary key types by converting keys to indexes via a hash function, bridging the gap between human-readable identifiers and machine-efficient array indexing.",
+      "analogy": "A hash table is like a library where a magic librarian has memorised exactly which shelf every book lives on. You say the title, they tell you the shelf instantly — no searching. The hash function is that librarian's memory.",
+      "common_mistakes": [
+        "Mutating an object used as a key after insertion — the hash changes and the entry becomes permanently unreachable",
+        "Assuming hash tables maintain insertion order (they do in Python 3.7+ and JavaScript ES2015+, but not in all languages)",
+        "Ignoring worst-case O(n) performance — when many keys collide, lookup degrades to a linear scan of the chain"
+      ],
+      "applications": [
+        "O(1) record lookup by primary key in database caches",
+        "Implementing sets for O(1) membership testing",
+        "Counting word or element frequencies (word → count)",
+        "Memoisation: caching computed results keyed by input to avoid redundant work",
+        "Router tables: URL path → handler function mapping"
+      ],
+      "complexity": {
+        "time": "O(1) average lookup, insert, delete; O(n) worst case (many collisions)",
+        "space": "O(n)"
+      }
+    },
+    "validation_question": {
+      "prompt": "How does a hash table achieve O(1) average-case lookup?",
+      "options": [
+        "It keeps all keys sorted so it can binary search",
+        "It scans every bucket until it finds the key",
+        "It uses a hash function to compute the exact array index for the key directly",
+        "It stores all values at index 0 and searches from there"
+      ],
+      "correct": "It uses a hash function to compute the exact array index for the key directly"
+    },
+    "quiz": [
+      {
+        "q": "What is a 'collision' in a hash table?",
+        "options": [
+          "When two values are identical",
+          "When two different keys produce the same hash index",
+          "When the hash table runs out of memory",
+          "When a key is deleted and leaves a gap"
+        ],
+        "correct": 1
+      },
+      {
+        "q": "What is the average-case time complexity for looking up a key in a well-implemented hash table?",
+        "options": ["O(log n)", "O(n)", "O(1)", "O(n²)"],
+        "correct": 2
+      },
+      {
+        "q": "Why should you NOT mutate an object after using it as a hash table key?",
+        "options": [
+          "It makes the table larger",
+          "The hash value changes, making the original entry permanently unreachable",
+          "It deletes all other keys in the table",
+          "Objects cannot be used as keys"
+        ],
+        "correct": 1
+      }
+    ]
+  },
+  {
     "id": "linear_search",
     "label": "Linear Search",
     "prerequisites": ["arrays", "loops"],
     "teaching": {
-      "explanation": "Linear search scans an array from the first element to the last, comparing each one to the target until it finds a match or exhausts the array. It is the simplest search algorithm and requires no preconditions — the array does not need to be sorted. The worst case (target not found or at the very end) checks every element: O(n) time. It's practical for small arrays or unsorted data, but slow on large collections.",
-      "analogy": "Linear search is like looking for a specific name in a stack of unalphabetized index cards — you flip through each card one by one from top to bottom. You might get lucky and find it on the first card, or you might have to check all 1,000 before giving up."
+      "explanation": "Linear search scans an array from the first element to the last, comparing each one to the target until it finds a match or exhausts the array. It is the simplest search algorithm and requires no preconditions — the array does not need to be sorted. The worst case (target not found or at the very end) checks every element: O(n) time. It is practical for small arrays or unsorted data, but slow on large collections.",
+      "why_it_exists": "When data is unsorted or too small to justify preprocessing, you need the simplest possible search — check every element until you find it or run out. Linear search works on any collection, in any order, with zero setup cost.",
+      "analogy": "Linear search is like looking for a specific name in a stack of unsorted index cards — you flip through each card one by one from top to bottom. You might get lucky and find it on the first card, or you might have to check all 1,000 before giving up.",
+      "common_mistakes": [
+        "Using linear search on large sorted datasets when binary search is available — the performance gap is enormous (O(n) vs O(log n))",
+        "Forgetting to handle the 'not found' case — returning -1 or null must be handled by the caller, or silent bugs occur",
+        "Searching for an object by reference when you want to match by value — structurally identical objects may be missed"
+      ],
+      "applications": [
+        "Finding an element in a small unsorted list of contacts or items",
+        "Checking if an element exists before adding it to a collection that is too small to justify indexing",
+        "Situations where data changes so frequently that maintaining a sorted order or index is not worth the cost",
+        "Baseline comparison when benchmarking faster search algorithms"
+      ],
+      "complexity": {
+        "time": "O(n) worst case; O(1) best case (first element matches)",
+        "space": "O(1)"
+      }
     },
     "validation_question": {
       "prompt": "What is the worst-case time complexity of linear search on an array of n elements?",
@@ -214,8 +607,24 @@
     "label": "Sorted Arrays",
     "prerequisites": ["arrays", "loops"],
     "teaching": {
-      "explanation": "A sorted array has all its elements arranged in order — typically ascending. This one property unlocks much faster searching algorithms. When you look at the middle element and compare it to your target, you can immediately discard half the array: if your target is smaller, it must be in the left half; if larger, the right half. Without sorting, you cannot safely skip any elements. Maintaining a sorted array costs O(n) for insertions (you must shift elements) but the search speedup is often worth it.",
-      "analogy": "Think of a sorted array as a dictionary vs. a random word list. In a dictionary, if you open to the middle and see 'Monkey' but you're looking for 'Apple', you know to go left. In a random list, you have no such shortcut."
+      "explanation": "A sorted array has all its elements arranged in order — typically ascending. This one property unlocks much faster searching algorithms. When you look at the middle element and compare it to your target, you can immediately discard half the array: if your target is smaller, it must be in the left half; if larger, the right half. Without sorting, you cannot safely skip any elements. Maintaining a sorted array costs O(n) for insertions (you must shift elements to preserve order) but the search speedup often justifies it.",
+      "why_it_exists": "Sorting data once upfront enables far faster repeated searches. Sort 1 million items once at O(n log n) cost, then search 10,000 times with binary search at O(log n) each — far cheaper than 10,000 linear searches at O(n) each.",
+      "analogy": "Think of a sorted array as a dictionary versus a random word list. In a dictionary, if you open to the middle and see 'Monkey' but you are looking for 'Apple', you know immediately to go left and skip the entire right half. In a random word list, you have no such shortcut.",
+      "common_mistakes": [
+        "Using a sorted array when you need frequent insertions — each insert is O(n) because elements must shift to maintain order",
+        "Forgetting that JavaScript's sort() uses lexicographic order by default: [1, 10, 2].sort() → [1, 10, 2], not [1, 2, 10]",
+        "Applying binary search to a slice of a sorted array but using the returned index as if it refers to the original array"
+      ],
+      "applications": [
+        "Enabling binary search for fast lookups in large, read-heavy datasets",
+        "Leaderboards and rankings that must be displayed in sorted order",
+        "The merge step in merge sort requires two sorted arrays",
+        "Range queries: find all elements between min and max in O(log n + k) time"
+      ],
+      "complexity": {
+        "time": "O(n log n) to sort; O(log n) to search once sorted; O(n) to insert while maintaining order",
+        "space": "O(n)"
+      }
     },
     "validation_question": {
       "prompt": "If you're looking for the number 42 in a sorted array and the middle element is 75, where must 42 be?",
@@ -249,10 +658,10 @@
         "correct": 1
       },
       {
-        "q": "What is the downside of keeping an array sorted?",
+        "q": "What is the downside of keeping an array sorted at all times?",
         "options": [
           "You can no longer search it",
-          "Insertions require shifting elements — O(n) cost",
+          "Insertions require shifting elements — O(n) cost per insertion",
           "It doubles memory usage",
           "Sorted arrays cannot store negative numbers"
         ],
@@ -265,8 +674,24 @@
     "label": "Binary Search",
     "prerequisites": ["sorted_arrays", "divide_and_conquer"],
     "teaching": {
-      "explanation": "Binary search finds a target in a sorted array by repeatedly halving the search space. Start with pointers at low=0 and high=n-1, compute mid=(low+high)/2. If arr[mid] equals the target, done. If target < arr[mid], search the left half (high = mid-1). If target > arr[mid], search the right half (low = mid+1). Each step eliminates half the remaining elements. After k steps, roughly n/2^k elements remain — it takes at most log₂(n) steps. For 1,000,000 elements that's only ~20 comparisons vs. 500,000 on average for linear search.",
-      "analogy": "Binary search is exactly how you find a word in a physical dictionary. You open to the middle, see if your word is alphabetically before or after, flip to the middle of the remaining half, and repeat. You never re-examine the discarded half."
+      "explanation": "Binary search finds a target in a sorted array by repeatedly halving the search space. Start with pointers at low=0 and high=n-1, compute mid=(low+high)/2. If arr[mid] equals the target, done. If target < arr[mid], search the left half (high = mid-1). If target > arr[mid], search the right half (low = mid+1). Each step eliminates half the remaining elements. After k steps, roughly n/2^k elements remain — it takes at most log₂(n) steps. For 1,000,000 elements that is only ~20 comparisons versus 500,000 on average for linear search.",
+      "why_it_exists": "Linear search on a million items takes up to a million steps. Binary search on the same sorted million takes at most 20 steps. For data that is searched repeatedly and can be sorted once, binary search is one of the most impactful algorithmic improvements available.",
+      "analogy": "Binary search is exactly how you find a word in a physical dictionary. You open to the middle, see if your word comes before or after alphabetically, then flip to the middle of the remaining half, and repeat. You never re-examine the discarded half.",
+      "common_mistakes": [
+        "Applying binary search to unsorted data — it will silently return wrong answers without crashing",
+        "Off-by-one in the pointer update: using mid instead of mid+1 or mid-1 as the new boundary causes an infinite loop",
+        "Integer overflow in (left + right) / 2 in languages with fixed-width integers — use left + (right - left) / 2 instead"
+      ],
+      "applications": [
+        "Searching a sorted product catalogue, user list, or database index by key",
+        "Finding the insertion point to maintain a sorted list (Python's bisect module does this)",
+        "Git bisect: binary searching through commit history to find when a bug was introduced",
+        "Standard library sort/search implementations in most compiled languages"
+      ],
+      "complexity": {
+        "time": "O(log n)",
+        "space": "O(1) iterative; O(log n) recursive (call stack depth)"
+      }
     },
     "validation_question": {
       "prompt": "What is the time complexity of binary search?",
@@ -302,12 +727,87 @@
     ]
   },
   {
+    "id": "big_o_time_complexity",
+    "label": "Big-O / Time Complexity",
+    "prerequisites": ["loops"],
+    "teaching": {
+      "explanation": "Big-O notation describes how an algorithm's runtime scales as the input size n grows. Common complexities from fastest to slowest: O(1) constant (doesn't depend on n), O(log n) logarithmic (binary search — halves the problem each step), O(n) linear (one loop), O(n log n) linearithmic (merge sort), O(n²) quadratic (nested loops), O(2ⁿ) exponential (recursive subset enumeration). Big-O ignores constant factors and lower-order terms — O(3n + 100) is just O(n). It describes the worst-case growth rate, telling you how the algorithm behaves at scale.",
+      "why_it_exists": "Measuring exact runtime in milliseconds depends on hardware, load, and input. Big-O abstracts all that away to answer the only question that matters at scale: as input size doubles, does runtime stay flat, double, or quadruple? This makes algorithm comparison hardware-independent and input-independent.",
+      "analogy": "Big-O is like asking 'if my city doubles in population, how much longer does my commute take?' O(1) means no change (you have a private helicopter). O(n) means twice as long. O(n²) means four times as long — catastrophically worse. It is about the shape of growth, not the exact time.",
+      "common_mistakes": [
+        "Confusing best-case and worst-case — Big-O conventionally means worst case unless stated otherwise (best case uses Omega, average uses Theta)",
+        "Treating O(n log n) and O(n²) as similar — for n=1,000,000 that is ~20M vs ~1 trillion operations, a factor of 50,000",
+        "Ignoring space complexity — using extra memory proportional to input size can cause out-of-memory errors just as easily as slow code causes timeouts"
+      ],
+      "applications": [
+        "Choosing between sort algorithms: O(n log n) merge sort versus O(n²) bubble sort",
+        "Predicting whether a solution will time-out before submitting to a coding challenge",
+        "Comparing data structure options: O(1) hash map vs O(log n) BST vs O(n) linear scan",
+        "Estimating database query cost and whether an index is needed"
+      ]
+    },
+    "validation_question": {
+      "prompt": "An algorithm with two nested loops, each running n times, has what time complexity?",
+      "options": ["O(1)", "O(n)", "O(n²)", "O(2n)"],
+      "correct": "O(n²)"
+    },
+    "quiz": [
+      {
+        "q": "What does O(1) mean?",
+        "options": [
+          "The algorithm runs in exactly 1 second",
+          "The runtime is constant regardless of input size",
+          "The algorithm makes exactly 1 comparison",
+          "The algorithm only works on inputs of size 1"
+        ],
+        "correct": 1
+      },
+      {
+        "q": "Why does Big-O ignore constant factors like '3' in O(3n)?",
+        "options": [
+          "Constants are always less than 1",
+          "Constants don't change the growth rate as n approaches infinity",
+          "Computer hardware automatically removes constants",
+          "Big-O is only used for sorting algorithms"
+        ],
+        "correct": 1
+      },
+      {
+        "q": "Which ordering correctly ranks complexities from best to worst?",
+        "options": [
+          "O(n²) < O(n log n) < O(n) < O(log n) < O(1)",
+          "O(1) < O(log n) < O(n) < O(n log n) < O(n²)",
+          "O(log n) < O(1) < O(n) < O(n²) < O(n log n)",
+          "O(n) < O(1) < O(log n) < O(n log n) < O(n²)"
+        ],
+        "correct": 1
+      }
+    ]
+  },
+  {
     "id": "divide_and_conquer",
     "label": "Divide & Conquer",
     "prerequisites": ["recursion"],
     "teaching": {
       "explanation": "Divide and conquer is a problem-solving strategy with three steps: (1) Divide — split the problem into smaller subproblems of the same type. (2) Conquer — solve each subproblem, usually recursively, until they are trivial. (3) Combine — merge the solutions to form the answer to the original problem. The key insight is that many large problems become simple when small enough. This strategy underlies binary search (divide the array), merge sort (divide then merge), and many other efficient algorithms.",
-      "analogy": "Imagine organizing a 64-team tournament bracket. Instead of ranking all 64 teams at once, you split them into two groups of 32, find the best in each group, then play those two winners against each other. Each group does the same split — divide, conquer, combine."
+      "why_it_exists": "Many problems that appear to require O(n²) work can actually be broken into two independent O(n/2) halves — solving them separately and combining results takes O(n log n), a massive improvement. Divide and conquer is the pattern that unlocks this class of optimisation.",
+      "analogy": "Imagine organising a 64-team tournament bracket. Instead of ranking all 64 teams at once, you split them into two groups of 32, find the champion of each group, then play the two champions against each other. Each group does the same split — divide, conquer, combine.",
+      "common_mistakes": [
+        "Forgetting the combine step — solving the subproblems correctly but not merging results (the classic mistake in a first merge sort implementation)",
+        "Creating unbalanced splits — if one half is always size n-1 and the other size 1, the recursion degrades to O(n²)",
+        "Confusing divide-and-conquer with recursion — recursion is the mechanism; D&C is the strategy of splitting, solving independently, and combining"
+      ],
+      "applications": [
+        "Merge sort and quick sort (efficient sorting)",
+        "Binary search (efficient searching)",
+        "Strassen's algorithm (faster matrix multiplication)",
+        "Fast Fourier Transform (signal processing, audio, image compression)",
+        "Closest pair of points (computational geometry)"
+      ],
+      "complexity": {
+        "time": "O(n log n) when the split is balanced (e.g. merge sort); varies by algorithm",
+        "space": "O(log n) stack depth for recursive splitting"
+      }
     },
     "validation_question": {
       "prompt": "Which of the following best describes the 'divide' step in divide and conquer?",
@@ -358,7 +858,23 @@
     "prerequisites": ["arrays", "loops"],
     "teaching": {
       "explanation": "Bubble sort repeatedly steps through the array, compares adjacent elements, and swaps them if they are in the wrong order. Each full pass bubbles the largest unsorted element to its correct position. After n-1 passes, the array is sorted. Selection sort instead finds the minimum element in the unsorted portion and swaps it to the front, growing the sorted portion by one each pass. Both algorithms run in O(n²) time — quadratic — because for each of n passes they do O(n) work. They are simple to understand but impractical for large data.",
-      "analogy": "Bubble sort is like a line of people arranging themselves by height: you walk the line comparing pairs side-by-side and swapping if needed, then repeat. Selection sort is like picking the shortest person out of the remaining crowd and placing them at the front of the sorted line, one at a time."
+      "why_it_exists": "Before learning O(n log n) sorts, O(n²) sorts build the essential intuition for what comparison-based sorting means — you compare pairs, decide their order, and rearrange. They show concretely why better algorithms are necessary and motivate the cleverness of merge sort.",
+      "analogy": "Bubble sort is like a line of people arranging themselves by height: you walk the line comparing pairs side-by-side and swapping if needed, then repeat. Selection sort is like picking the shortest person out of the remaining crowd and placing them at the front of the sorted line, one at a time.",
+      "common_mistakes": [
+        "Stopping after the first pass thinking the array is sorted — bubble sort requires up to n-1 full passes",
+        "Using O(n²) sort on large arrays in a real program where O(n log n) is available — timing will fail on large inputs",
+        "Not recognising that selection sort always makes the same number of comparisons regardless of whether the array is already sorted"
+      ],
+      "applications": [
+        "Educational tool: the simplest algorithm that demonstrates comparison-based sorting",
+        "Tiny embedded systems where code simplicity matters more than performance",
+        "Insertion sort (a variant) is the fastest sort in practice for very small or nearly-sorted arrays",
+        "Many production sort implementations fall back to insertion sort for partitions of size ≤ 16"
+      ],
+      "complexity": {
+        "time": "O(n²) average and worst case; O(n) best case for bubble sort on an already-sorted array",
+        "space": "O(1) — in-place sorting"
+      }
     },
     "validation_question": {
       "prompt": "What is the time complexity of bubble sort and selection sort?",
@@ -404,7 +920,23 @@
     "prerequisites": ["loops"],
     "teaching": {
       "explanation": "Recursion is when a function calls itself to solve a smaller version of the same problem. Every recursive function must have: (1) a base case — a condition where it stops and returns directly, and (2) a recursive case — where it calls itself with a simpler input. For example, factorial(n) = n × factorial(n-1), with factorial(0) = 1 as the base case. Each call is pushed onto the call stack. When the base case is reached, the stack unwinds and results combine. Without a base case, recursion runs forever — a stack overflow.",
-      "analogy": "Recursion is like standing between two mirrors facing each other — each reflection contains a smaller version of the same scene. The 'base case' is the tiny reflection in the distance that's too small to show the next one."
+      "why_it_exists": "Some problems are naturally self-similar — a tree is a root plus smaller trees; a sorted list is one element plus a smaller sorted list. Recursion lets you express solutions that match the problem's own structure, making the code dramatically shorter and more readable than an equivalent iterative version.",
+      "analogy": "Recursion is like standing between two mirrors facing each other — each reflection contains a smaller version of the same scene. The 'base case' is the tiny reflection in the distance that is too small to show the next one.",
+      "common_mistakes": [
+        "Missing or wrong base case — the #1 cause of infinite recursion and stack overflow errors",
+        "Returning void instead of returning the recursive call's result — the result is computed but thrown away and never used",
+        "Trying to mentally trace every level of the call stack at once instead of trusting that the recursive call correctly solves the smaller problem"
+      ],
+      "applications": [
+        "Tree and graph traversal — most naturally expressed as recursive functions",
+        "Divide-and-conquer algorithms: merge sort, quick sort, binary search",
+        "Parsing: JSON parsers, compilers, and expression evaluators use recursive descent",
+        "Backtracking: solving mazes, generating permutations, Sudoku solvers"
+      ],
+      "complexity": {
+        "time": "Varies by problem — typically depth × work done per call",
+        "space": "O(depth) for the call stack — a concern for deeply recursive calls on large inputs"
+      }
     },
     "validation_question": {
       "prompt": "What happens if a recursive function has no base case?",
@@ -433,7 +965,7 @@
         "correct": 2
       },
       {
-        "q": "What does factorial(3) evaluate to using recursion? (factorial(n) = n * factorial(n-1), factorial(0) = 1)",
+        "q": "What does factorial(3) evaluate to? (factorial(n) = n × factorial(n-1), factorial(0) = 1)",
         "options": ["3", "5", "6", "9"],
         "correct": 2
       }
@@ -444,8 +976,20 @@
     "label": "Base Case & Recursive Case",
     "prerequisites": ["recursion"],
     "teaching": {
-      "explanation": "Every recursive algorithm has two kinds of behavior. The base case is the simplest possible input — one where you can answer directly without recursing (e.g., an empty array has no maximum). The recursive case is everything else: you make the problem one step simpler, call yourself, and use the result. Good recursive design means clearly identifying both. A flawed base case (wrong condition, missing return) is the #1 cause of bugs in recursive code. Think: 'What is the smallest input I can answer instantly? That's my base case.'",
-      "analogy": "Recursion is like a set of Russian nesting dolls. The recursive case is every doll that opens to reveal a smaller one. The base case is the innermost doll — it doesn't open. You can't build the set without knowing exactly which doll is the smallest."
+      "explanation": "Every recursive algorithm has two kinds of behavior. The base case is the simplest possible input — one where you can answer directly without recursing (e.g., an empty array has sum 0). The recursive case is everything else: you make the problem one step simpler, call yourself, and use the result. Good recursive design means clearly identifying both before writing code. A flawed base case — wrong condition, missing return — is the #1 cause of bugs in recursive code.",
+      "why_it_exists": "A recursive function without a correct base case does not terminate. A recursive case that does not reduce the problem does not converge. These two parts are the complete correctness contract for any recursive function — the base case guarantees termination, the recursive case guarantees progress.",
+      "analogy": "Recursion is like a set of Russian nesting dolls. The recursive case is every doll that opens to reveal a smaller one. The base case is the innermost doll — it does not open. You cannot build the set without knowing exactly which doll is the smallest.",
+      "common_mistakes": [
+        "Base case returns the wrong value (e.g., returning 1 when 0 is correct for an empty-list sum), silently producing wrong answers",
+        "Recursive case does not actually reduce the problem — passing n instead of n-1, leading to infinite recursion",
+        "Multiple valid paths through the recursion but only one base case, leaving some paths without a stopping condition"
+      ],
+      "applications": [
+        "Stopping conditions for all tree and graph recursive algorithms",
+        "Merge sort's single-element base case is why the recursion terminates",
+        "Fibonacci: base cases fib(0)=0, fib(1)=1 anchor the entire computation",
+        "All divide-and-conquer algorithms rely on correctly identified base cases to terminate"
+      ]
     },
     "validation_question": {
       "prompt": "For a recursive function summing all elements in an array, what should the base case be?",
@@ -483,7 +1027,7 @@
         "options": [
           "The function works correctly most of the time",
           "The function returns 0 by default",
-          "The function either crashes or gives wrong answers",
+          "The function either crashes or produces wrong answers",
           "The compiler automatically fixes it"
         ],
         "correct": 2
@@ -495,8 +1039,24 @@
     "label": "Merge Sort",
     "prerequisites": ["recursion", "basic_sorting", "divide_and_conquer"],
     "teaching": {
-      "explanation": "Merge sort is a divide-and-conquer sorting algorithm. Step 1 (Divide): split the array in half. Step 2 (Conquer): recursively sort each half. Step 3 (Combine): merge the two sorted halves into one sorted array. The merge step walks two pointers across the two halves, always picking the smaller element — this takes O(n). The recursion has O(log n) levels. Total: O(n log n), which is dramatically better than bubble sort's O(n²) on large inputs. Merge sort is stable (preserves order of equal elements) and predictable — it always runs in O(n log n).",
-      "analogy": "Imagine sorting a hand of playing cards by repeatedly splitting the deck into halves, sorting each half, and then merging them back together. Two people can sort two halves simultaneously, then you interleave the sorted halves by always picking the smaller top card from either pile."
+      "explanation": "Merge sort is a divide-and-conquer sorting algorithm. Step 1 (Divide): split the array in half. Step 2 (Conquer): recursively sort each half. Step 3 (Combine): merge the two sorted halves into one sorted array. The merge step walks two pointers across the two halves, always picking the smaller element — this takes O(n). The recursion has O(log n) levels. Total: O(n log n), which is dramatically better than bubble sort's O(n²) on large inputs. Merge sort is stable (preserves the relative order of equal elements) and consistently performs at O(n log n) — no worst-case degradation.",
+      "why_it_exists": "O(n²) sorting algorithms become unusable at scale — sorting 1 million items with bubble sort takes around 1 trillion operations. Merge sort achieves O(n log n) by exploiting the fact that merging two already-sorted arrays is O(n), combined with divide and conquer.",
+      "analogy": "Imagine sorting a hand of playing cards by repeatedly splitting the deck in half, sorting each half, and then merging them back together. Two people can sort two halves simultaneously, then interleave the sorted halves by always picking the smaller top card from either pile.",
+      "common_mistakes": [
+        "Off-by-one in the split — using the wrong midpoint formula causes uneven halves and subtle bugs",
+        "Forgetting the base case — an array of 0 or 1 elements is already sorted and must return immediately",
+        "Allocating a new result array inside every recursive call — allocate once at the top level and reuse the space"
+      ],
+      "applications": [
+        "Sorting linked lists (merge sort is preferred over quick sort for linked lists because it does not require random access)",
+        "External sorting: merging sorted chunks from multiple disk files that do not fit in RAM",
+        "Stable sorting requirement: merge sort preserves the relative order of equal elements",
+        "Python's built-in sort (Timsort) and Java's Arrays.sort for objects are both based on merge sort"
+      ],
+      "complexity": {
+        "time": "O(n log n) guaranteed — no worst-case degradation",
+        "space": "O(n) extra space for the merge step"
+      }
     },
     "validation_question": {
       "prompt": "What is the time complexity of merge sort?",
@@ -528,101 +1088,9 @@
         "q": "What is the base case of the recursive merge sort function?",
         "options": [
           "An array with 10 elements",
-          "An array with 0 or 1 elements (already sorted)",
+          "An array with 0 or 1 elements — already sorted",
           "An array whose first element is the smallest",
           "An array with an even number of elements"
-        ],
-        "correct": 1
-      }
-    ]
-  },
-  {
-    "id": "stacks",
-    "label": "Stacks",
-    "prerequisites": ["arrays"],
-    "teaching": {
-      "explanation": "A stack is a data structure that follows Last-In, First-Out (LIFO) order. You can only add (push) or remove (pop) elements from the top. The most recently pushed item is the first to be popped. Stacks appear everywhere: the call stack in recursion, undo history in text editors, the browser's back button, and expression evaluation in calculators. Common operations: push(x) — add to top, pop() — remove from top, peek() — see top without removing. All three are O(1).",
-      "analogy": "A stack is exactly like a stack of plates. You add plates to the top and take them from the top. You cannot remove the plate at the bottom without first removing all the plates above it. The last plate you added is the first one you'll use."
-    },
-    "validation_question": {
-      "prompt": "If you push 1, 2, 3 onto a stack in that order and then pop once, what is returned?",
-      "options": ["1", "2", "3", "The stack is unchanged"],
-      "correct": "3"
-    },
-    "quiz": [
-      {
-        "q": "What does LIFO stand for?",
-        "options": [
-          "Linear Input, First Output",
-          "Last In, First Out",
-          "List Insert, Find Object",
-          "Lowest Index, First Operation"
-        ],
-        "correct": 1
-      },
-      {
-        "q": "Which real-world feature is implemented using a stack?",
-        "options": [
-          "A print queue (jobs print in order submitted)",
-          "A browser's back button (last visited page first)",
-          "A to-do list (tasks completed in any order)",
-          "A search result list (sorted by relevance)"
-        ],
-        "correct": 1
-      },
-      {
-        "q": "What does the 'peek' operation do on a stack?",
-        "options": [
-          "Removes the top element",
-          "Adds a new element on top",
-          "Returns the top element without removing it",
-          "Searches the stack for a value"
-        ],
-        "correct": 2
-      }
-    ]
-  },
-  {
-    "id": "big_o_time_complexity",
-    "label": "Big-O / Time Complexity",
-    "prerequisites": ["loops"],
-    "teaching": {
-      "explanation": "Big-O notation describes how an algorithm's runtime scales as the input size n grows. Common complexities from fastest to slowest: O(1) constant (doesn't depend on n), O(log n) logarithmic (binary search — halves the problem each step), O(n) linear (one loop), O(n log n) linearithmic (merge sort), O(n²) quadratic (nested loops — bubble sort), O(2ⁿ) exponential (recursive subset enumeration). Big-O ignores constant factors and lower-order terms — O(3n + 100) is just O(n). It describes the worst-case growth rate, telling you how the algorithm behaves at scale.",
-      "analogy": "Big-O is like asking 'if my city doubles in population, how much longer does my commute take?' O(1) means no change (you have a helicopter). O(n) means twice as long (proportional to population). O(n²) means four times as long — catastrophically worse. It's about the shape of growth, not the exact time."
-    },
-    "validation_question": {
-      "prompt": "An algorithm with two nested loops, each running n times, has what time complexity?",
-      "options": ["O(1)", "O(n)", "O(n²)", "O(2n)"],
-      "correct": "O(n²)"
-    },
-    "quiz": [
-      {
-        "q": "What does O(1) mean?",
-        "options": [
-          "The algorithm runs in exactly 1 second",
-          "The runtime is constant regardless of input size",
-          "The algorithm makes exactly 1 comparison",
-          "The algorithm only works on inputs of size 1"
-        ],
-        "correct": 1
-      },
-      {
-        "q": "Why does Big-O ignore constant factors like '3' in O(3n)?",
-        "options": [
-          "Constants are always less than 1",
-          "Constants don't change the growth rate as n approaches infinity",
-          "Computer hardware automatically removes constants",
-          "Big-O is only used for sorting algorithms"
-        ],
-        "correct": 1
-      },
-      {
-        "q": "Which ordering correctly ranks complexities from best to worst?",
-        "options": [
-          "O(n²) < O(n log n) < O(n) < O(log n) < O(1)",
-          "O(1) < O(log n) < O(n) < O(n log n) < O(n²)",
-          "O(log n) < O(1) < O(n) < O(n²) < O(n log n)",
-          "O(n) < O(1) < O(log n) < O(n log n) < O(n²)"
         ],
         "correct": 1
       }
@@ -633,8 +1101,25 @@
     "label": "Trees (Intro)",
     "prerequisites": ["recursion", "stacks"],
     "teaching": {
-      "explanation": "A tree is a hierarchical data structure where each node has a value and zero or more child nodes. Every tree has a single root node at the top. Nodes with no children are called leaves. The relationship is strictly parent-to-child with no cycles — this distinguishes a tree from a general graph. A binary tree is a special case where every node has at most two children (left and right). Trees model hierarchies naturally: file systems, HTML DOM, organizational charts, and decision trees. The depth of a node is how many edges from the root; the height of the tree is the maximum depth.",
-      "analogy": "A tree is like a family tree. The great-grandparent is the root. Each person's children branch below them. Leaves are people who have no children yet. You can trace any path from the root down to any leaf without ever going backward."
+      "explanation": "A tree is a hierarchical data structure where each node has a value and zero or more child nodes. Every tree has a single root node at the top. Nodes with no children are called leaves. The relationship is strictly parent-to-child with no cycles — this distinguishes a tree from a general graph. A binary tree is a special case where every node has at most two children (left and right). Trees model hierarchies naturally: file systems, HTML DOM, organisational charts, and decision trees. The depth of a node is how many edges from the root; the height of the tree is the maximum depth of any leaf.",
+      "why_it_exists": "Many real-world relationships are hierarchical, not linear — files within folders, elements within elements in HTML, an organisation with managers and reports. Linked lists and arrays cannot express these relationships. Trees are the natural data structure for any parent-child hierarchy.",
+      "analogy": "A tree is like a family tree. The great-grandparent is the root. Each person's children branch below them. Leaves are people who have no children yet. You can trace any path from the root down to any leaf without ever going backward or sideways.",
+      "common_mistakes": [
+        "Confusing trees with graphs — a tree is a graph, but with no cycles and exactly one path between any two nodes",
+        "Treating a tree as a sorted structure when it has not been built as a binary search tree",
+        "Off-by-one in height or depth calculations — root is at depth 0 by most conventions, but some books use depth 1"
+      ],
+      "applications": [
+        "File systems: directories are tree nodes, files are leaves",
+        "HTML and XML DOM: browsers render a tree of nested elements",
+        "Compilers: Abstract Syntax Trees (ASTs) represent program structure for analysis and code generation",
+        "Heaps (priority queues) are complete binary trees used in schedulers and Dijkstra's algorithm",
+        "Decision trees in machine learning classify data by following branch conditions"
+      ],
+      "complexity": {
+        "time": "O(log n) search/insert/delete for a balanced BST; O(n) worst case for a degenerate (unbalanced) tree",
+        "space": "O(n)"
+      }
     },
     "validation_question": {
       "prompt": "What is the root of a tree?",
@@ -679,8 +1164,24 @@
     "label": "Tree Traversal",
     "prerequisites": ["trees_intro", "recursion"],
     "teaching": {
-      "explanation": "Tree traversal visits every node exactly once in a defined order. Three classic orders for binary trees: (1) In-order (left → root → right): for a binary search tree, this visits nodes in sorted ascending order. (2) Pre-order (root → left → right): useful for copying or serializing a tree. (3) Post-order (left → right → root): useful for deleting nodes or evaluating expression trees — process children before parents. All three are naturally implemented with recursion. Each traversal is O(n) because every node is visited once.",
-      "analogy": "Think of traversal like reading a book outline. Pre-order is like reading the chapter title, then all sub-sections — you see the heading before the details. In-order is like reading page by page left to right. Post-order is like summarizing every sub-section before writing the chapter summary."
+      "explanation": "Tree traversal visits every node exactly once in a defined order. Three classic orders for binary trees: (1) In-order (left → root → right): for a binary search tree, this visits nodes in sorted ascending order. (2) Pre-order (root → left → right): useful for copying or serialising a tree. (3) Post-order (left → right → root): useful for deleting nodes or evaluating expression trees — process children before parents. All three are naturally implemented with recursion. Each traversal is O(n) because every node is visited exactly once.",
+      "why_it_exists": "To process every element in a tree — print it, search it, sum its values, or validate its structure — you need a systematic rule for the order in which you visit nodes. Without traversal algorithms, you can only examine the root.",
+      "analogy": "Think of traversal like reading a book outline. Pre-order is reading the chapter title then all its sub-sections — you see the heading before the details. In-order is reading page by page left to right. Post-order is writing a chapter summary only after you have read all its sub-sections.",
+      "common_mistakes": [
+        "Mixing up in-order and pre-order — the order of output matters for correctness in serialisation and reconstruction",
+        "Forgetting that DFS (recursive/stack) and BFS (queue) traverse in entirely different orders and produce different results",
+        "Stack overflow on very deep or unbalanced trees — convert to an iterative traversal using an explicit stack for large inputs"
+      ],
+      "applications": [
+        "In-order traversal of a BST produces sorted output — foundation of BST-based sorting",
+        "Pre-order traversal is used to serialise a tree to a file and reconstruct it later",
+        "Post-order traversal safely deletes a tree by freeing children before freeing parents",
+        "Level-order (BFS) traversal finds the shortest path in unweighted trees and graphs"
+      ],
+      "complexity": {
+        "time": "O(n) — every node is visited exactly once",
+        "space": "O(h) where h is tree height — O(log n) for balanced trees, O(n) worst case"
+      }
     },
     "validation_question": {
       "prompt": "For a binary search tree, which traversal visits nodes in sorted ascending order?",
@@ -712,6 +1213,73 @@
           "Finding the root quickly"
         ],
         "correct": 2
+      }
+    ]
+  },
+  {
+    "id": "graphs_intro",
+    "label": "Graphs",
+    "prerequisites": ["trees_intro", "recursion"],
+    "teaching": {
+      "explanation": "A graph is a collection of nodes (vertices) connected by edges. Unlike a tree, a graph can have cycles (paths that loop back to the starting node), and nodes can connect to any other node in any pattern. Graphs can be directed (edges have a direction, like a one-way street) or undirected (edges go both ways). Weighted graphs assign a cost to each edge. Two common representations: adjacency list (each node stores a list of neighbours — efficient for sparse graphs) and adjacency matrix (V×V grid where cell [i][j] is 1 if there is an edge — efficient for dense graphs and edge-existence checks).",
+      "why_it_exists": "Trees can only express hierarchical parent-child relationships. Graphs express any relationship — friendships, road connections, package dependencies, web links — where any node can connect to any other node in any pattern, including cycles.",
+      "analogy": "A graph is like a road map. Cities are nodes. Roads are edges — some are one-way (directed), some have tolls (weighted). Unlike a family tree, the map has no single root and roads can form loops: you can drive in a circle back to where you started.",
+      "common_mistakes": [
+        "Not tracking visited nodes during traversal — cyclic graphs cause infinite loops if you revisit nodes without checking",
+        "Treating a directed graph as undirected — edge A→B does not imply B→A; always check direction before assuming",
+        "Choosing adjacency matrix for a sparse graph — it wastes O(V²) space and time when most cells are 0"
+      ],
+      "applications": [
+        "Social networks: friend recommendations using BFS from a profile node",
+        "GPS navigation: shortest route using Dijkstra's algorithm on a weighted graph of roads",
+        "Dependency resolution: npm/pip build a dependency graph and topologically sort it to determine install order",
+        "Web crawling: the web is a directed graph of pages linked to pages"
+      ],
+      "complexity": {
+        "time": "O(V + E) for DFS and BFS where V = vertices, E = edges",
+        "space": "O(V + E) for adjacency list; O(V²) for adjacency matrix"
+      }
+    },
+    "validation_question": {
+      "prompt": "What is the key difference between a tree and a graph?",
+      "options": [
+        "Trees have nodes but graphs do not",
+        "Graphs can have cycles and arbitrary connections; trees are acyclic with a strict parent-child hierarchy",
+        "Graphs are always weighted; trees are always unweighted",
+        "Trees are directed; graphs are undirected"
+      ],
+      "correct": "Graphs can have cycles and arbitrary connections; trees are acyclic with a strict parent-child hierarchy"
+    },
+    "quiz": [
+      {
+        "q": "Why must you track visited nodes when traversing a graph (but not always a tree)?",
+        "options": [
+          "Graphs are larger than trees",
+          "Graphs can have cycles, which cause infinite loops if nodes are revisited",
+          "Trees automatically prevent revisiting",
+          "Graphs use a different traversal order"
+        ],
+        "correct": 1
+      },
+      {
+        "q": "In a directed graph, edge A → B means:",
+        "options": [
+          "You can travel from A to B and from B to A",
+          "You can only travel from A to B — not from B to A (unless a separate edge B→A exists)",
+          "A and B are the same node",
+          "The edge has a weight of 1"
+        ],
+        "correct": 1
+      },
+      {
+        "q": "Which representation is more memory-efficient for a sparse graph (few edges)?",
+        "options": [
+          "Adjacency matrix — fast edge lookup",
+          "Adjacency list — stores only existing edges",
+          "Both use the same amount of memory",
+          "A sorted array of all edges"
+        ],
+        "correct": 1
       }
     ]
   }

@@ -1,0 +1,216 @@
+We need to refactor the educational flow of MindBridge AI. This is not a bug fix—it is a redesign of the learning pipeline to match the product vision.
+
+=========================
+PRODUCT PHILOSOPHY
+=========================
+
+MindBridge is NOT an AI chatbot.
+
+MindBridge is an AI tutor that first understands the student's intent before deciding how to help.
+
+There are TWO completely different learning flows.
+
+--------------------------------------------------
+FLOW A — LEARNING MODE
+--------------------------------------------------
+
+If the student is asking to LEARN a topic, such as:
+
+- What is an array?
+- Explain recursion.
+- Tell me about data structures.
+- Teach me stacks.
+- Define trees.
+- What is binary search?
+
+then MindBridge should NEVER immediately diagnose prerequisite gaps.
+
+Instead it should:
+
+Step 1
+Identify the requested topic.
+
+Step 2
+Teach THAT topic completely.
+
+Every lesson should include:
+
+• Definition
+• Why it exists
+• Core intuition
+• Real-world analogy
+• Code example
+• Common mistakes
+• Practical applications
+• Time & Space Complexity (when applicable)
+
+Step 3
+
+After the lesson, show:
+
+"Would you like MindBridge to check whether you're missing any prerequisite concepts?"
+
+This should be OPTIONAL.
+
+Only if the student chooses YES should prerequisite diagnosis begin.
+
+--------------------------------------------------
+FLOW B — DIAGNOSIS MODE
+--------------------------------------------------
+
+If the student expresses confusion, such as:
+
+- I don't understand binary search.
+- Why isn't recursion making sense?
+- My DFS skips nodes.
+- My merge sort isn't working.
+- Binary search always returns -1.
+- I'm confused about trees.
+
+Then use the complete diagnostic pipeline:
+
+Question
+
+↓
+
+Diagnosis
+
+↓
+
+Hypothesis
+
+↓
+
+Micro-validation
+
+↓
+
+Identify prerequisite gap
+
+↓
+
+Teach prerequisite
+
+↓
+
+Reconnect prerequisite to original topic
+
+↓
+
+Quiz
+
+↓
+
+Update mastery
+
+This is the only time prerequisite diagnosis should happen automatically.
+
+--------------------------------------------------
+TOPIC RECOGNITION
+--------------------------------------------------
+
+Broad educational topics should NEVER fall back to Variables & Data Types.
+
+The system must recognize:
+
+Data Structures
+Algorithms
+Arrays
+Linked Lists
+Stacks
+Queues
+Trees
+Graphs
+Hash Tables
+Searching
+Sorting
+Recursion
+Big-O
+Binary Search
+Merge Sort
+DFS
+BFS
+
+If "Data Structures" is requested, create a dedicated lesson for it.
+
+That lesson should explain:
+
+• What a data structure is
+• Why computers need data structures
+• Linear vs Non-linear
+• Common data structures
+• Real-world examples
+• When each structure is used
+
+Do NOT redirect Data Structures to Variables & Data Types.
+
+--------------------------------------------------
+FALLBACK
+--------------------------------------------------
+
+Variables & Data Types should NEVER be the universal fallback.
+
+Only teach Variables & Data Types when:
+
+1. the student explicitly asks for them
+
+OR
+
+2. prerequisite diagnosis proves they are the missing concept.
+
+--------------------------------------------------
+ROUTER
+--------------------------------------------------
+
+Create an intent router before diagnosis.
+
+Intent = Learning
+
+↓
+
+Teach requested topic
+
+Intent = Confusion
+
+↓
+
+Diagnosis pipeline
+
+Do not send every request into /api/diagnose.
+
+--------------------------------------------------
+KNOWLEDGE GRAPH
+--------------------------------------------------
+
+Expand graph.json.
+
+Include a proper node for:
+
+data_structures
+
+with:
+
+- lesson
+- analogy
+- code
+- applications
+- quiz
+- prerequisites
+
+Do not treat it as an unknown topic.
+
+--------------------------------------------------
+GOAL
+--------------------------------------------------
+
+The experience should feel like a human tutor.
+
+If a beginner asks:
+
+"What are data structures?"
+
+they should immediately receive a complete lesson on Data Structures.
+
+Only afterwards should MindBridge optionally offer to diagnose prerequisite gaps.
+
+This educational flow is the core philosophy of MindBridge AI.

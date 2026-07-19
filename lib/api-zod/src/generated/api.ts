@@ -67,7 +67,14 @@ export const TeachResponse = zod.object({
   "node_id": zod.string().describe('The prerequisite node id'),
   "label": zod.string().describe('The prerequisite node label'),
   "explanation": zod.string().describe('Explanation of the prerequisite concept'),
+  "why_it_exists": zod.string().optional().describe('The problem this concept solves — why it was invented'),
   "analogy": zod.string().describe('Real-world analogy for the prerequisite concept'),
+  "common_mistakes": zod.array(zod.string()).optional().describe('Common errors students make with this concept'),
+  "applications": zod.array(zod.string()).optional().describe('Real-world use cases where this concept appears'),
+  "complexity": zod.object({
+  "time": zod.string().optional().describe('Time complexity (e.g. \"O(n log n)\")'),
+  "space": zod.string().optional().describe('Space complexity (e.g. \"O(n)\")')
+}).optional(),
   "original_topic_node_id": zod.string().optional().describe('Node id for the topic the student originally asked about'),
   "original_topic_label": zod.string().optional().describe('Label of the topic originally asked about'),
   "original_topic_explanation": zod.string().optional().describe('Beginner-friendly explanation of the originally asked topic'),
