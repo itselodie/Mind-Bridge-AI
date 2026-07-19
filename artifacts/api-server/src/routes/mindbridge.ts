@@ -159,6 +159,40 @@ const MasteryInputSchema = z.object({
 
 // ─── Routes ─────────────────────────────────────────────────────────────────
 
+// ─── Domain classifier (server-side guard) ───────────────────────────────────
+
+const DSA_TOPIC_TERMS = [
+  // data structure names
+  "array", "linked list", "stack", "queue", "deque", "heap", "trie",
+  "tree", "graph", "hash table", "hash map", "hashmap", "hashtable",
+  "hash", "set", "map", "dictionary", "dict",
+  // algorithm families & techniques
+  "algorithm", "sort", "sorting", "sorted", "binary search", "linear search",
+  "recursion", "recursive", "iteration", "iterative",
+  "dynamic programming", "memoization", "tabulation",
+  "divide and conquer", "greedy", "backtracking",
+  "bfs", "dfs", "breadth first", "depth first", "traversal",
+  "merge sort", "quick sort", "bubble sort", "insertion sort", "selection sort",
+  // complexity
+  "big-o", "big o", "complexity", "time complexity", "space complexity",
+  "asymptotic", "runtime", "amortized",
+  // programming primitives relevant to DSA
+  "loop", "loops", "for loop", "while loop", "iteration", "iterate",
+  "index", "indices", "pointer", "node", "edge", "vertex", "vertices",
+  "call stack", "stack overflow", "stack trace",
+  "index out of bounds", "off by one", "out of bounds",
+  "insert", "delete", "append", "traverse", "visit",
+  "pivot", "partition", "swap", "collision", "rehash",
+  "balanced", "unbalanced", "leaf", "root",
+  "implement", "implementation", "code", "function", "program",
+  "data structure", "pseudocode",
+];
+
+function isDSAQuestion(question: string): boolean {
+  const q = question.toLowerCase();
+  return DSA_TOPIC_TERMS.some((term) => q.includes(term));
+}
+
 /** POST /api/diagnose — calls LLM, returns hypothesis */
 router.post("/diagnose", async (req, res) => {
   console.log("[MindBridge] POST /api/diagnose received");
@@ -166,6 +200,19 @@ router.post("/diagnose", async (req, res) => {
     const parsed = DiagnoseInputSchema.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: "question is required" });
+      return;
+    }
+
+    // ── Domain guard ────────────────────────────────────────────────────────
+    if (!isDSAQuestion(parsed.data.question)) {
+      console.log("[MindBridge] POST /api/diagnose — out-of-scope question rejected");
+      res.status(422).json({
+        out_of_scope: true,
+        message:
+          "This version of MindBridge specializes in Data Structures & Algorithms. " +
+          "Please ask about topics such as Arrays, Linked Lists, Stacks, Queues, Trees, " +
+          "Graphs, Recursion, Sorting, Searching, Big-O, or other DSA concepts.",
+      });
       return;
     }
 

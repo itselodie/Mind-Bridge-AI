@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useDiagnose } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Lightbulb, Send, Loader2, BrainCircuit } from "lucide-react";
+import { Lightbulb, Send, Loader2, BrainCircuit, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const EXAMPLES = [
@@ -214,6 +214,49 @@ function resolveNodeId(topic: string): string | null {
   return best?.nodeId ?? null;
 }
 
+// ─── Domain classifier ────────────────────────────────────────────────────────
+
+/**
+ * Returns true when the question is about Data Structures & Algorithms.
+ * Uses a two-pass strategy:
+ *   1. Any known TOPIC_ALIAS keyword present → definitely in scope.
+ *   2. Extended DSA signals (programming primitives, error messages, jargon).
+ * Anything that matches neither is treated as out-of-domain.
+ */
+const DSA_SIGNALS = [
+  // programming primitives relevant to DSA
+  "index", "indices", "pointer", "null pointer", "dangling pointer",
+  "node", "nodes", "edge", "edges", "vertex", "vertices",
+  "call stack", "stack overflow", "stack trace", "stack frame",
+  "index out of bounds", "off by one", "off-by-one", "out of bounds",
+  "traversal", "traverse", "visit", "walk",
+  "insert", "deletion", "append", "prepend", "left child", "right child",
+  "parent node", "leaf node", "leaf", "root node",
+  "in-order", "pre-order", "post-order", "level order",
+  "memoization", "memo", "tabulation", "bottom-up", "top-down",
+  "pivot", "partition", "swap", "comparison",
+  "collision", "rehash", "load factor", "chaining", "open addressing",
+  "amortized", "worst case", "best case", "average case",
+  "implement", "implementation", "code", "program", "function",
+  "data structure", "algorithm", "pseudocode",
+  "runtime", "overhead", "efficient", "inefficient", "optimal",
+  "cycle", "path", "connected", "component", "weighted",
+  "height", "depth", "level", "balanced", "unbalanced",
+  "predecessor", "successor", "inorder predecessor",
+];
+
+function isDSAQuestion(question: string): boolean {
+  const q = question.toLowerCase();
+
+  // Pass 1: any TOPIC_ALIASES key present → in scope
+  for (const alias of Object.keys(TOPIC_ALIASES)) {
+    if (q.includes(alias)) return true;
+  }
+
+  // Pass 2: extended DSA signals
+  return DSA_SIGNALS.some((signal) => q.includes(signal));
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface DiagnoseResult {
@@ -238,6 +281,7 @@ interface QuestionInputProps {
 export function QuestionInput({ onDirectLearn, onDiagnosed }: QuestionInputProps) {
   const [question, setQuestion] = useState("");
   const [isResolvingLocally, setIsResolvingLocally] = useState(false);
+  const [outOfScope, setOutOfScope] = useState(false);
   const diagnose = useDiagnose();
 
   const isPending = diagnose.isPending || isResolvingLocally;
@@ -247,26 +291,32 @@ export function QuestionInput({ onDirectLearn, onDiagnosed }: QuestionInputProps
     const q = question.trim();
     if (!q || isPending) return;
 
+    // ── Step 1: Domain check ────────────────────────────────────────────────
+    // Short-circuit first via TOPIC_ALIASES (always in scope if a node resolves),
+    // then fall back to the broader keyword classifier.
     const intent = detectIntent(q);
+    const topic = intent === "LEARN" ? extractTopic(q) : q;
+    const resolvedNodeId = intent === "LEARN" ? resolveNodeId(topic) : null;
 
-    if (intent === "LEARN") {
-      const topic = extractTopic(q);
-      const nodeId = resolveNodeId(topic);
-
-      if (nodeId) {
-        // ✅ LEARN + matched node → skip the API entirely
-        setIsResolvingLocally(true);
-        // Use a microtask to let the loading state render before the parent re-renders
-        Promise.resolve().then(() => {
-          setIsResolvingLocally(false);
-          onDirectLearn(nodeId, topic);
-        });
-        return;
-      }
-      // LEARN but topic not in local graph → fall through to /diagnose as best-effort
+    if (!resolvedNodeId && !isDSAQuestion(q)) {
+      setOutOfScope(true);
+      return;
     }
 
-    // CONFUSED (or unrecognised LEARN topic) → call the diagnosis API
+    setOutOfScope(false);
+
+    // ── Step 2: Intent router ───────────────────────────────────────────────
+    if (intent === "LEARN" && resolvedNodeId) {
+      // ✅ LEARN + matched node → skip the API entirely
+      setIsResolvingLocally(true);
+      Promise.resolve().then(() => {
+        setIsResolvingLocally(false);
+        onDirectLearn(resolvedNodeId, topic);
+      });
+      return;
+    }
+
+    // CONFUSED (or unrecognised LEARN topic that passed domain check) → diagnose API
     diagnose.mutate(
       { data: { question: q } },
       {
@@ -305,7 +355,7 @@ export function QuestionInput({ onDirectLearn, onDiagnosed }: QuestionInputProps
             <input
               type="text"
               value={question}
-              onChange={(e) => setQuestion(e.target.value)}
+              onChange={(e) => { setQuestion(e.target.value); setOutOfScope(false); }}
               placeholder="e.g. What is an array? / I keep getting index out of bounds..."
               className="w-full pl-4 pr-16 py-4 text-lg bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-muted-foreground/60"
               disabled={isPending}
@@ -346,7 +396,29 @@ export function QuestionInput({ onDirectLearn, onDiagnosed }: QuestionInputProps
         </div>
       )}
 
-      {!isPending && (
+      {!isPending && outOfScope && (
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <Card className="border-2 border-amber-200 bg-amber-50/60 dark:border-amber-800 dark:bg-amber-950/30 shadow-sm">
+            <CardContent className="p-5 flex gap-4 items-start">
+              <div className="shrink-0 mt-0.5 p-2 rounded-xl bg-amber-100 dark:bg-amber-900/50">
+                <BookOpen className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div className="space-y-2">
+                <p className="font-semibold text-amber-900 dark:text-amber-200 leading-snug">
+                  This version of MindBridge specializes in Data Structures &amp; Algorithms.
+                </p>
+                <p className="text-sm text-amber-800/80 dark:text-amber-300/80 leading-relaxed">
+                  Please ask about topics such as{" "}
+                  <span className="font-medium">Arrays, Linked Lists, Stacks, Queues, Trees, Graphs, Recursion, Sorting, Searching, Big-O,</span>{" "}
+                  or other DSA concepts.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {!isPending && !outOfScope && (
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground px-1">
             <Lightbulb className="w-4 h-4" />
